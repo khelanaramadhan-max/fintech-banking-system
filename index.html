@@ -496,23 +496,75 @@ input,button,select{font-family:inherit;}
       <!-- TRANSFER -->
       <div id="page-transfer" class="page">
         <div class="ph"><div class="pt" data-i18n="page_transfer"></div><div class="ps" data-i18n="page_transfer_sub"></div></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+
+        <!-- Transfer type selector -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px" id="tf-type-grid"></div>
+
+        <!-- Transfer info banner -->
+        <div id="tf-banner" style="background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r2);padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;font-size:.8rem;transition:all .3s">
+          <span id="tf-banner-ico" style="font-size:1.3rem">⇄</span>
+          <div><div id="tf-banner-title" style="font-weight:700;margin-bottom:2px"></div><div id="tf-banner-desc" style="color:var(--text2);font-size:.75rem"></div></div>
+          <div style="margin-left:auto;text-align:right"><div id="tf-banner-timing" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--blue3)"></div><div id="tf-banner-fee" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text3);margin-top:2px"></div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px">
           <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="new_transfer"></span></div>
+            <div class="card-hd"><span class="card-title" data-i18n="new_transfer"></span><span id="tf-type-badge" class="bdg b-b" style="font-size:.58rem">FAST</span></div>
             <div class="card-body">
               <div class="fld"><label data-i18n="from_account"></label><select id="tf-from" onchange="updateTfInfo()"></select></div>
-              <div class="fld"><label data-i18n="to_account"></label><input type="text" id="tf-to"></div>
+
+              <!-- Recipient field — changes label based on type -->
+              <div class="fld">
+                <label id="tf-to-label" data-i18n="to_account"></label>
+                <div style="position:relative">
+                  <input type="text" id="tf-to" style="width:100%;background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s" oninput="validateTfTo()">
+                  <span id="tf-to-ico" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:.9rem"></span>
+                </div>
+                <div id="tf-to-hint" style="font-size:.67rem;color:var(--text3);margin-top:4px"></div>
+              </div>
+
+              <!-- SWIFT-only fields -->
+              <div id="tf-swift-fields" style="display:none">
+                <div class="g2">
+                  <div class="fld"><label id="lbl-bic">BIC / SWIFT Code</label><input type="text" id="tf-bic" maxlength="11" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%;font-family:'Space Mono',monospace;letter-spacing:.05em" placeholder="e.g. AKBKTRIS"></div>
+                  <div class="fld"><label id="lbl-currency">Currency</label>
+                    <select id="tf-currency" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 28px 11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%237a90b8' viewBox='0 0 20 20'%3E%3Cpath d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:16px">
+                      <option value="USD">🇺🇸 USD — US Dollar</option>
+                      <option value="EUR">🇪🇺 EUR — Euro</option>
+                      <option value="GBP">🇬🇧 GBP — British Pound</option>
+                      <option value="CHF">🇨🇭 CHF — Swiss Franc</option>
+                      <option value="JPY">🇯🇵 JPY — Japanese Yen</option>
+                      <option value="CAD">🇨🇦 CAD — Canadian Dollar</option>
+                      <option value="AED">🇦🇪 AED — UAE Dirham</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="fld"><label id="lbl-beneficiary-name">Beneficiary Name</label><input type="text" id="tf-ben-name" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%"></div>
+                <div class="fld"><label id="lbl-beneficiary-bank">Beneficiary Bank Name</label><input type="text" id="tf-ben-bank" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%"></div>
+              </div>
+
               <div class="g2">
-                <div class="fld"><label data-i18n="amount"></label><input type="number" id="tf-amt" min="0.01" step="0.01"></div>
+                <div class="fld"><label data-i18n="amount"></label><input type="number" id="tf-amt" min="0.01" step="0.01" oninput="checkFastLimit(parseFloat(this.value)||0)"></div>
                 <div class="fld"><label data-i18n="description"></label><input type="text" id="tf-desc"></div>
               </div>
-              <div class="fm"><button class="btn btn-p" onclick="doTransfer()" data-i18n="btn_send"></button></div>
+
+              <!-- FAST limit warning -->
+              <div id="tf-limit-warn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--r3);padding:9px 13px;font-size:.76rem;color:#fbbf24;margin-bottom:10px"></div>
+
+              <div class="fm"><button class="btn btn-p" onclick="doTransfer()" id="tf-submit-btn" data-i18n="btn_send"></button></div>
               <div class="mb" id="tf-msg"></div>
             </div>
           </div>
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="sender_info"></span></div>
-            <div class="card-body"><div id="tf-info" style="font-size:.83rem;color:var(--text2);line-height:2" data-i18n="select_account"></div></div>
+
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card">
+              <div class="card-hd"><span class="card-title" data-i18n="sender_info"></span></div>
+              <div class="card-body"><div id="tf-info" style="font-size:.83rem;color:var(--text2);line-height:2.1" data-i18n="select_account"></div></div>
+            </div>
+            <div class="card" id="tf-rules-card">
+              <div class="card-hd"><span class="card-title" id="tf-rules-title">Transfer Rules</span></div>
+              <div class="card-body" id="tf-rules-body" style="font-size:.78rem;color:var(--text2);line-height:2"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1330,31 +1382,212 @@ function doPayment(){
 }
 
 /* ═══ TRANSFER ═══ */
-function loadTransfer(){buildSel('tf-from');updateTfInfo();}
+let TF_TYPE = 'FAST';
+
+const TF_TYPES = {
+  FAST:{
+    ico:'⚡',
+    label:{tr:'FAST',en:'FAST',ru:'FAST'},
+    timing:{tr:'7/24 Anlık',en:'7/24 Instant',ru:'7/24 Мгновенно'},
+    fee:{tr:'Ücretsiz',en:'Free',ru:'Бесплатно'},
+    desc:{tr:'Fonların Anlık ve Sürekli Transferi — Bankalar arası anlık para transferi',en:'Instant interbank transfer available 24/7, all year round',ru:'Мгновенный межбанковский перевод — круглосуточно, без выходных'},
+    toHint:{tr:'IBAN, Hesap No, Tel (+90) veya E-posta',en:'IBAN, Account No, Phone (+90) or Email',ru:'IBAN, номер счёта, телефон (+90) или e-mail'},
+    toLbl:{tr:'Alıcı (IBAN / Tel / E-posta)',en:'Recipient (IBAN / Phone / Email)',ru:'Получатель (IBAN / Тел / Email)'},
+    limit:100000,
+    limitTxt:{tr:'FAST işlem limiti ₺100.000 (TCMB yönetmeliği)',en:'FAST transaction limit ₺100,000 (CBRT regulation)',ru:'Лимит FAST: ₺100 000 (требование ЦБ Турции)'},
+    rules:{tr:['⚡ Anlık — genellikle 5 saniye içinde ulaşır','🕐 7/24 hizmet — resmi tatillerde de çalışır','💰 Maksimum ₺100.000 / işlem','📱 Tel veya e-posta ile Kolay Adres desteği','🏦 Tüm Türk bankaları desteklenir'],en:['⚡ Instant — typically arrives within 5 seconds','🕐 7/24 service — works on public holidays too','💰 Max ₺100,000 per transaction','📱 Kolay Adres: send via phone or email','🏦 Supported by all Turkish banks'],ru:['⚡ Мгновенно — обычно за 5 секунд','🕐 7/24 — работает в праздники','💰 Максимум ₺100 000 за транзакцию','📱 Поддержка Kolay Adres (тел/email)','🏦 Все турецкие банки']},
+    swift:false,badge:'b-b'
+  },
+  EFT:{
+    ico:'🏦',
+    label:{tr:'EFT',en:'EFT',ru:'EFT'},
+    timing:{tr:'Hafta içi 08:00–17:00',en:'Weekdays 08:00–17:00',ru:'Будни 08:00–17:00'},
+    fee:{tr:'İşlem başı ücret uygulanabilir',en:'Fee may apply per transaction',ru:'Возможна комиссия за операцию'},
+    desc:{tr:'Elektronik Fon Transferi — Bankalar arası büyük tutarlı transferler için',en:'Electronic Fund Transfer — for large interbank transfers during business hours',ru:'Электронный перевод средств — крупные межбанковские переводы в рабочее время'},
+    toHint:{tr:'Alıcı IBAN numarası (TR ile başlar)',en:'Recipient IBAN (starts with TR)',ru:'IBAN получателя (начинается с TR)'},
+    toLbl:{tr:'Alıcı IBAN',en:'Recipient IBAN',ru:'IBAN получателя'},
+    limit:null,
+    limitTxt:null,
+    rules:{tr:['🏦 Bankacılık saatleri: 08:00–17:00 (hafta içi)','💰 Tutar limiti yoktur','⏰ Saat 17:00 sonrası işlemler ertesi gün işlenir','📄 IBAN zorunludur','🔁 Her işlem için referans numarası üretilir'],en:['🏦 Processing hours: 08:00–17:00 (weekdays)','💰 No amount limit','⏰ After 17:00 → processed next business day','📄 IBAN is mandatory','🔁 Unique reference number per transaction'],ru:['🏦 Рабочие часы: 08:00–17:00 (будни)','💰 Ограничений по сумме нет','⏰ После 17:00 → обрабатывается на следующий день','📄 IBAN обязателен','🔁 Уникальный реф. номер для каждой операции']},
+    swift:false,badge:'b-a'
+  },
+  HAVALE:{
+    ico:'⇄',
+    label:{tr:'Havale',en:'HAVALE',ru:'HAVALE'},
+    timing:{tr:'Anlık (aynı banka)',en:'Instant (same bank)',ru:'Мгновенно (один банк)'},
+    fee:{tr:'Ücretsiz',en:'Free',ru:'Бесплатно'},
+    desc:{tr:'Havale — Aynı banka içi anlık para transferi',en:'Intrabank instant transfer — between accounts at the same bank',ru:'Внутрибанковский мгновенный перевод'},
+    toHint:{tr:'Alıcı hesap no veya IBAN',en:'Recipient account number or IBAN',ru:'Номер счёта или IBAN получателя'},
+    toLbl:{tr:'Alıcı Hesap / IBAN',en:'Recipient Account / IBAN',ru:'Счёт / IBAN получателя'},
+    limit:null,
+    limitTxt:null,
+    rules:{tr:['⚡ Anlık — banka içi işlem, anında tamamlanır','💰 Tutar limiti yoktur','🔒 Sadece aynı bankadaki hesaplara','🆓 Ücret alınmaz','📋 Referans numarası ile takip edilebilir'],en:['⚡ Instant — intrabank, completes immediately','💰 No amount limit','🔒 Only between accounts at the same bank','🆓 No fee charged','📋 Trackable via reference number'],ru:['⚡ Мгновенно — внутрибанковская операция','💰 Без ограничений по сумме','🔒 Только внутри одного банка','🆓 Без комиссии','📋 Отслеживается по реф. номеру']},
+    swift:false,badge:'b-g'
+  },
+  SWIFT:{
+    ico:'🌐',
+    label:{tr:'SWIFT',en:'SWIFT',ru:'SWIFT'},
+    timing:{tr:'1–5 iş günü',en:'1–5 business days',ru:'1–5 рабочих дней'},
+    fee:{tr:'Correspondent bank ücreti uygulanır',en:'Correspondent bank fee applies',ru:'Взимается комиссия банка-корреспондента'},
+    desc:{tr:'SWIFT — Uluslararası para transferi, BIC/SWIFT kodu ile',en:'International wire transfer via SWIFT network with BIC code and IBAN',ru:'Международный банковский перевод через сеть SWIFT с BIC-кодом'},
+    toHint:{tr:'Alıcı IBAN (uluslararası format)',en:'Recipient IBAN (international format)',ru:'IBAN получателя (международный формат)'},
+    toLbl:{tr:'Alıcı IBAN',en:'Recipient IBAN',ru:'IBAN получателя'},
+    limit:null,
+    limitTxt:null,
+    rules:{tr:['🌐 BIC/SWIFT kodu zorunludur (8 veya 11 karakter)','📅 İşlem süresi: 1–5 iş günü','💱 Yabancı para birimi seçilebilir','💰 Muhabir banka ücreti alıcıdan kesililebilir','📄 MT103 mesaj standardı — gerçek SWIFT transferi ile aynı yapı'],en:['🌐 BIC/SWIFT code is mandatory (8 or 11 chars)','📅 Processing: 1–5 business days','💱 Foreign currency supported','💰 Correspondent bank fee may be deducted from amount','📄 MT103 message structure — mirrors real SWIFT format'],ru:['🌐 BIC/SWIFT код обязателен (8 или 11 символов)','📅 Срок обработки: 1–5 рабочих дней','💱 Поддержка иностранных валют','💰 Комиссия может быть удержана из суммы','📄 Структура MT103 — зеркалит реальный SWIFT']},
+    swift:true,badge:'b-b'
+  }
+};
+
+function buildTfTypeGrid(){
+  const g=document.getElementById('tf-type-grid');if(!g)return;
+  g.innerHTML=Object.entries(TF_TYPES).map(([k,v])=>`
+    <div class="quick-btn ${k===TF_TYPE?'style="border-color:var(--blue2);background:var(--s3)"':''}" id="tft-${k}" onclick="selectTfType('${k}')" style="${k===TF_TYPE?'border-color:var(--blue2);background:var(--s3);':''}">
+      <div class="qi">${v.ico}</div>
+      <div class="ql" style="font-size:.78rem;font-weight:700">${v.label[LANG]||v.label.en}</div>
+      <div style="font-size:.6rem;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${v.timing[LANG]||v.timing.en}</div>
+    </div>`).join('');
+}
+
+function selectTfType(type){
+  TF_TYPE=type;
+  buildTfTypeGrid();
+  const v=TF_TYPES[type];
+  // Banner
+  document.getElementById('tf-banner-ico').textContent=v.ico;
+  document.getElementById('tf-banner-title').textContent=(v.label[LANG]||v.label.en)+' — '+(v.desc[LANG]||v.desc.en).split('—')[0].trim();
+  document.getElementById('tf-banner-desc').textContent=(v.desc[LANG]||v.desc.en);
+  document.getElementById('tf-banner-timing').textContent='⏱ '+(v.timing[LANG]||v.timing.en);
+  document.getElementById('tf-banner-fee').textContent='💳 '+(v.fee[LANG]||v.fee.en);
+  // Badge
+  const badge=document.getElementById('tf-type-badge');
+  badge.textContent=v.label[LANG]||v.label.en;
+  badge.className='bdg '+v.badge;
+  // To label + hint
+  const lbl=document.getElementById('tf-to-label');
+  if(lbl)lbl.textContent=v.toLbl[LANG]||v.toLbl.en;
+  const hint=document.getElementById('tf-to-hint');
+  if(hint)hint.textContent=v.toHint[LANG]||v.toHint.en;
+  // SWIFT extra fields
+  const sf=document.getElementById('tf-swift-fields');
+  if(sf)sf.style.display=v.swift?'block':'none';
+  // Rules card
+  const rb=document.getElementById('tf-rules-body');
+  const rt=document.getElementById('tf-rules-title');
+  if(rb&&rt){
+    const rules=v.rules[LANG]||v.rules.en;
+    rt.textContent=(LANG==='tr'?'Transfer Kuralları':LANG==='ru'?'Правила перевода':'Transfer Rules')+' — '+v.label.en;
+    rb.innerHTML=rules.map(r=>`<div style="padding:3px 0;border-bottom:1px solid var(--bd)">${r}</div>`).join('');
+  }
+  // Limit warning reset
+  const warn=document.getElementById('tf-limit-warn');
+  if(warn)warn.style.display='none';
+  // Clear to field
+  const toEl=document.getElementById('tf-to');
+  if(toEl){toEl.value='';toEl.placeholder=v.toHint[LANG]||v.toHint.en;}
+  document.getElementById('tf-to-ico').textContent='';
+}
+
+function validateTfTo(){
+  const v=document.getElementById('tf-to').value.trim();
+  const ico=document.getElementById('tf-to-ico');
+  if(!v){ico.textContent='';return;}
+  // Detect what kind of input
+  if(/^TR\d{24}$/i.test(v.replace(/\s/g,''))){ico.textContent='🏦';}
+  else if(/^FT\d{8}/.test(v)){ico.textContent='✅';}
+  else if(/^\+90/.test(v)||/^05\d{9}/.test(v)){ico.textContent='📱';}
+  else if(/@/.test(v)){ico.textContent='✉️';}
+  else{ico.textContent='';}
+}
+
 function updateTfInfo(){
   const v=document.getElementById('tf-from')?.value,a=DB.accounts.find(x=>x.id===v),el=document.getElementById('tf-info');
   if(!el)return;
-  if(a)el.innerHTML=`<span style="color:var(--text3)">${t('col_accounts').split('/')[0].trim()}</span>: <strong>${a.number}</strong><br><span style="color:var(--text3)">${t('acc_type')}</span>: <strong>${a.type}</strong><br><span style="color:var(--text3)">${t('balance')}</span>: <strong style="color:#34d399">${fmt(a.balance)}</strong>`;
+  if(a)el.innerHTML=`<span style="color:var(--text3)">${t('col_accounts').split('/')[0].trim()}</span>: <strong>${a.number}</strong><br><span style="color:var(--text3)">${t('acc_type')}</span>: <strong>${a.type}</strong><br><span style="color:var(--text3)">${t('balance')}</span>: <strong style="color:#34d399">${fmt(a.balance)}</strong><br><span style="color:var(--text3)">ID</span>: <span style="font-family:'Space Mono',monospace;font-size:.7rem">${a.id}</span>`;
   else el.textContent=t('select_account');
+  // Check FAST limit
+  const amt=parseFloat(document.getElementById('tf-amt')?.value||0);
+  checkFastLimit(amt);
 }
+
+function checkFastLimit(amt){
+  const v=TF_TYPES[TF_TYPE];
+  const warn=document.getElementById('tf-limit-warn');
+  if(!warn)return;
+  if(v.limit&&amt>v.limit){
+    warn.style.display='block';
+    warn.textContent='⚠ '+(v.limitTxt[LANG]||v.limitTxt.en)+' ('+fmt(v.limit)+')';
+  } else warn.style.display='none';
+}
+
+function loadTransfer(){
+  buildSel('tf-from');
+  updateTfInfo();
+  selectTfType(TF_TYPE);
+}
+
 function doTransfer(){
-  const fromId=document.getElementById('tf-from').value,toRef=document.getElementById('tf-to').value.trim(),amt=parseFloat(document.getElementById('tf-amt').value),desc=document.getElementById('tf-desc').value.trim();
+  const fromId=document.getElementById('tf-from').value;
+  const toRef=document.getElementById('tf-to').value.trim();
+  const amt=parseFloat(document.getElementById('tf-amt').value);
+  const desc=document.getElementById('tf-desc').value.trim();
+  const type=TF_TYPE;
+
   if(!fromId)return showMsg('tf-msg',t('err_from_acc'),'err');
   if(!toRef)return showMsg('tf-msg',t('err_to_acc'),'err');
   if(isNaN(amt)||amt<0.01)return showMsg('tf-msg',t('err_valid_amount'),'err');
-  const accs=DB.accounts,fa=accs.find(x=>x.id===fromId),ta=accs.find(x=>x.id===toRef||x.number===toRef);
+
+  // FAST limit check
+  if(type==='FAST'&&amt>100000){
+    const lw=TF_TYPES.FAST.limitTxt[LANG]||TF_TYPES.FAST.limitTxt.en;
+    return showMsg('tf-msg','⚠ '+lw,'err');
+  }
+
+  // SWIFT BIC validation
+  if(type==='SWIFT'){
+    const bic=document.getElementById('tf-bic').value.trim();
+    if(!bic||bic.length<8)return showMsg('tf-msg','Enter a valid BIC/SWIFT code (8–11 characters)','err');
+    const benName=document.getElementById('tf-ben-name').value.trim();
+    if(!benName)return showMsg('tf-msg','Enter beneficiary name','err');
+  }
+
+  const accs=DB.accounts;
+  const fa=accs.find(x=>x.id===fromId);
   if(!fa)return showMsg('tf-msg',t('err_not_found'),'err');
-  if(!ta)return showMsg('tf-msg',t('err_not_found'),'err');
-  if(fa.id===ta.id)return showMsg('tf-msg',t('err_same_acc'),'err');
   if(fa.balance<amt)return showMsg('tf-msg',t('err_insufficient')+fmt(fa.balance),'err');
-  const ref='TRF'+uid().toUpperCase();
-  fa.balance-=amt;ta.balance+=amt;DB.setAccounts(accs);
-  appendLedger(fa.id,'DEBIT',amt,fa.balance,'→ '+ta.number+(desc?' | '+desc:''),CU.id,ref);
-  appendLedger(ta.id,'CREDIT',amt,ta.balance,'← '+fa.number+(desc?' | '+desc:''),CU.id,ref);
-  addAudit(CU.id,'TRANSFER',fmt(amt)+' '+fa.number+' → '+ta.number,'SUCCESS');
-  showMsg('tf-msg',t('msg_transfer_ok')+ref,'ok');
-  toast(t('toast_transfer_ok'),'ok');
-  document.getElementById('tf-to').value='';document.getElementById('tf-amt').value='';
+
+  // For internal transfers, find recipient account
+  const ta=accs.find(x=>x.id===toRef||x.number===toRef||x.number===toRef.replace(/\s/g,''));
+
+  const ref=(type==='SWIFT'?'SWIFT':type.slice(0,3))+uid().toUpperCase();
+  const typeLabel=TF_TYPES[type].label.en;
+
+  if(ta&&fa.id!==ta.id){
+    // Internal transfer — both accounts found
+    fa.balance-=amt;ta.balance+=amt;DB.setAccounts(accs);
+    appendLedger(fa.id,'DEBIT',amt,fa.balance,`[${typeLabel}] → ${ta.number}`+(desc?' | '+desc:''),CU.id,ref);
+    appendLedger(ta.id,'CREDIT',amt,ta.balance,`[${typeLabel}] ← ${fa.number}`+(desc?' | '+desc:''),CU.id,ref);
+    addAudit(CU.id,'TRANSFER_'+type,fmt(amt)+' '+fa.number+' → '+ta.number,'SUCCESS');
+    const timingNote=type==='SWIFT'?' (1–5 business days)':type==='EFT'?' (next business day if after 17:00)':'';
+    showMsg('tf-msg',t('msg_transfer_ok')+ref+timingNote,'ok');
+  } else if(type==='SWIFT'||type==='EFT'||!ta){
+    // External / outbound transfer — debit only
+    fa.balance-=amt;DB.setAccounts(accs);
+    const bic=type==='SWIFT'?document.getElementById('tf-bic').value.trim():'';
+    const cur=type==='SWIFT'?document.getElementById('tf-currency').value:'TRY';
+    appendLedger(fa.id,'DEBIT',amt,fa.balance,`[${typeLabel}] → ${toRef.slice(0,20)}${bic?' BIC:'+bic:''} ${cur!=='TRY'?'('+cur+')':''}`.trim()+(desc?' | '+desc:''),CU.id,ref);
+    addAudit(CU.id,'TRANSFER_'+type,fmt(amt)+' → '+toRef.slice(0,20)+(bic?' ('+bic+')':''),'SUCCESS');
+    const statusMsg=type==='SWIFT'?` Processing: 1–5 business days`:type==='EFT'?` Processing: next business day if sent after 17:00`:'';
+    showMsg('tf-msg',t('msg_transfer_ok')+ref+statusMsg,'ok');
+  } else {
+    return showMsg('tf-msg',t('err_same_acc'),'err');
+  }
+
+  toast(`[${typeLabel}] `+fmt(amt)+' '+t('toast_transfer_ok'),'ok');
+  document.getElementById('tf-to').value='';
+  document.getElementById('tf-amt').value='';
+  document.getElementById('tf-to-ico').textContent='';
+  if(type==='SWIFT'){['tf-bic','tf-ben-name','tf-ben-bank'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
   loadTransfer();loadDashboard();
 }
 
