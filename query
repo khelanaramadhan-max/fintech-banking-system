@@ -1,0 +1,294 @@
+### ============================================================
+### Fintech — API Query Collection
+### Compatible with: VS Code REST Client, httpie, curl
+### Base URL: http://localhost:8000
+### ============================================================
+### Usage (VS Code): Install "REST Client" extension → click "Send Request"
+### Usage (httpie):  http POST :8000/auth/login email=admin@fintech.io password=Admin123!
+### ============================================================
+
+@base = http://localhost:8000
+@contentType = application/json
+
+### ── Store token after login ──────────────────────────────
+### Paste the token value returned by /auth/login below:
+@token = PASTE_JWT_TOKEN_HERE
+
+
+### ============================================================
+### 1. HEALTH CHECK
+### ============================================================
+
+GET {{base}}/health
+
+
+### ============================================================
+### 2. AUTH — Register new user
+### ============================================================
+
+POST {{base}}/auth/register
+Content-Type: {{contentType}}
+
+{
+  "full_name": "Ahmet Yılmaz",
+  "email": "ahmet@demo.fintech",
+  "phone": "+90 532 111 00 01",
+  "national_id": "12345678901",
+  "password": "Demo1234!"
+}
+
+
+### ============================================================
+### 3. AUTH — Login (Admin)
+### ============================================================
+
+POST {{base}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@fintech.io",
+  "password": "Admin123!"
+}
+
+
+### ============================================================
+### 4. AUTH — Login (Demo Customer)
+### ============================================================
+
+POST {{base}}/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "ahmet@demo.fintech",
+  "password": "Demo1234!"
+}
+
+
+### ============================================================
+### 5. AUTH — Get current user (me)
+### ============================================================
+
+GET {{base}}/auth/me
+Authorization: Bearer {{token}}
+
+
+### ============================================================
+### 6. ACCOUNTS — List my accounts
+### ============================================================
+
+GET {{base}}/accounts
+Authorization: Bearer {{token}}
+
+
+### ============================================================
+### 7. ACCOUNTS — Open a new account
+### Replace CUSTOMER_ID with your actual customer_id from register
+### ============================================================
+
+POST {{base}}/accounts
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "customer_id": "PASTE_CUSTOMER_ID_HERE",
+  "opening_balance": 10000.00
+}
+
+
+### ============================================================
+### 8. DEPOSIT — Top up an account
+### Replace ACCOUNT_ID with your actual account_id
+### ============================================================
+
+POST {{base}}/accounts/PASTE_ACCOUNT_ID_HERE/deposit
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "amount": 5000.00
+}
+
+
+### ============================================================
+### 9. WITHDRAW — Payment / withdrawal
+### ============================================================
+
+POST {{base}}/accounts/PASTE_ACCOUNT_ID_HERE/withdraw
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "amount": 250.00
+}
+
+
+### ============================================================
+### 10. TRANSFER — FAST (7/24 instant, max ₺100,000)
+### ============================================================
+
+POST {{base}}/transfers
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "from_account_id": "PASTE_FROM_ACCOUNT_ID",
+  "to_account_id": "PASTE_TO_ACCOUNT_ID",
+  "amount": 1500.00,
+  "description": "Test FAST transfer",
+  "type": "FAST"
+}
+
+
+### ============================================================
+### 11. TRANSFER — EFT (interbank, weekdays 08:00-17:00)
+### ============================================================
+
+POST {{base}}/transfers
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "from_account_id": "PASTE_FROM_ACCOUNT_ID",
+  "to_account_id": "PASTE_TO_ACCOUNT_ID",
+  "amount": 12500.00,
+  "description": "EFT payment",
+  "type": "EFT"
+}
+
+
+### ============================================================
+### 12. TRANSFER — SWIFT (international wire)
+### ============================================================
+
+POST {{base}}/transfers
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "from_account_id": "PASTE_FROM_ACCOUNT_ID",
+  "to_account_id": "DE89370400440532013000",
+  "amount": 2000.00,
+  "description": "Invoice payment EUR",
+  "type": "SWIFT",
+  "swift_bic": "DEUTDEDB",
+  "currency": "EUR",
+  "beneficiary_name": "Max Müller GmbH",
+  "beneficiary_bank": "Deutsche Bank AG"
+}
+
+
+### ============================================================
+### 13. TRANSFER — HAVALE (same-bank instant)
+### ============================================================
+
+POST {{base}}/transfers
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "from_account_id": "PASTE_FROM_ACCOUNT_ID",
+  "to_account_id": "PASTE_TO_ACCOUNT_ID",
+  "amount": 500.00,
+  "description": "Havale test",
+  "type": "HAVALE"
+}
+
+
+### ============================================================
+### 14. LEDGER — Account transaction history
+### ============================================================
+
+GET {{base}}/accounts/PASTE_ACCOUNT_ID_HERE/ledger
+Authorization: Bearer {{token}}
+
+
+### ============================================================
+### 15. LEDGER — Full system ledger (Admin only)
+### ============================================================
+
+GET {{base}}/ledger
+Authorization: Bearer {{token}}
+
+
+### ============================================================
+### 16. CUSTOMERS — List all (Admin only)
+### ============================================================
+
+GET {{base}}/customers
+Authorization: Bearer {{token}}
+
+
+### ============================================================
+### 17. AUDIT — Security audit trail (Admin only)
+### ============================================================
+
+GET {{base}}/audit
+Authorization: Bearer {{token}}
+
+
+### ============================================================
+### 18. EVENTS — Domain event stream (Admin only)
+### Expected: TransferCreated, AccountDebited, AccountCredited, TransferCompleted
+### ============================================================
+
+GET {{base}}/events
+Authorization: Bearer {{token}}
+
+
+### ============================================================
+### 19. EDGE CASE — FAST over ₺100,000 limit (should fail)
+### ============================================================
+
+POST {{base}}/transfers
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "from_account_id": "PASTE_FROM_ACCOUNT_ID",
+  "to_account_id": "PASTE_TO_ACCOUNT_ID",
+  "amount": 150000.00,
+  "description": "Should fail — over FAST limit",
+  "type": "FAST"
+}
+
+
+### ============================================================
+### 20. EDGE CASE — Transfer to self (should fail)
+### ============================================================
+
+POST {{base}}/transfers
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "from_account_id": "PASTE_SAME_ACCOUNT_ID",
+  "to_account_id": "PASTE_SAME_ACCOUNT_ID",
+  "amount": 100.00,
+  "description": "Should fail — same account",
+  "type": "FAST"
+}
+
+
+### ============================================================
+### 21. EDGE CASE — Insufficient balance (should fail)
+### ============================================================
+
+POST {{base}}/transfers
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "from_account_id": "PASTE_FROM_ACCOUNT_ID",
+  "to_account_id": "PASTE_TO_ACCOUNT_ID",
+  "amount": 9999999.00,
+  "description": "Should fail — insufficient funds",
+  "type": "EFT"
+}
+
+
+### ============================================================
+### 22. RATE LIMIT TEST — 429 Too Many Requests
+### Run this 101+ times in quick succession to trigger limiter
+### ============================================================
+
+GET {{base}}/health

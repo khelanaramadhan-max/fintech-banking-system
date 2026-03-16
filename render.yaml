@@ -1,0 +1,76 @@
+# ============================================================
+# Fintech — Render.com Deployment Configuration
+# Deploy to Render: https://render.com
+# Link this file at: Dashboard → New → Blueprint
+# ============================================================
+
+services:
+
+  # ── FastAPI Backend ──────────────────────────────────────
+  - type: web
+    name: fintech-api
+    runtime: python
+    region: frankfurt          # EU region (GDPR compliant)
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    autoDeploy: true
+
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_VERSION
+        value: 1.0.0
+      - key: LOG_LEVEL
+        value: INFO
+      - key: JWT_SECRET
+        generateValue: true       # Render auto-generates a secure random value
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRE_HOURS
+        value: 24
+      - key: ADMIN_EMAIL
+        value: admin@fintech.io
+      - key: ADMIN_PASSWORD
+        sync: false               # Set manually in Render dashboard (never commit)
+      - key: CORS_ORIGINS
+        value: https://fintech-core-banking.pages.dev,https://fintech-api.onrender.com
+      - key: RATE_LIMIT_PER_MINUTE
+        value: 100
+      - key: FAST_MAX_AMOUNT
+        value: 100000
+      - key: WEBHOOK_URL
+        value: https://fintech-webhook.onrender.com/webhook
+      - key: WEBHOOK_RETRY_ATTEMPTS
+        value: 3
+
+  # ── Webhook Receiver ─────────────────────────────────────
+  - type: web
+    name: fintech-webhook
+    runtime: python
+    region: frankfurt
+    plan: free
+    rootDir: backend
+    buildCommand: pip install fastapi uvicorn
+    startCommand: >
+      python -c "
+      from fastapi import FastAPI, Request
+      import uvicorn, json
+      app = FastAPI()
+      events = []
+      @app.post('/webhook')
+      async def receive(req: Request):
+          body = await req.json()
+          events.append(body)
+          print(f'EVENT: {body.get(\"event_type\")} | ref: {body.get(\"payload\",{}).get(\"ref\",\"?\")[:8]}')
+          return {'received': True}
+      @app.get('/events')
+      def list_events(): return events[-50:]
+      uvicorn.run(app, host='0.0.0.0', port=int(__import__('os').environ.get('PORT',9000)))
+      "
+    autoDeploy: true
+    envVars:
+      - key: LOG_LEVEL
+        value: INFO

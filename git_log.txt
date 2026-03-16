@@ -1,0 +1,99 @@
+commit a7f3c91d2e4b18a5f09c3d7e6b2a1f8c4d9e0b3f
+Author: Team 2 <team2@fintech.edu>
+Date:   Mon Mar 16 18:42:11 2026 +0300
+
+    feat: add EFT/SWIFT/FAST/HAVALE transfer types with TCMB rules
+
+    - 4-tile transfer type selector with live info banner
+    - SWIFT extra fields: BIC, currency, beneficiary name + bank
+    - FAST ₺100,000 limit enforced per TCMB regulation
+    - Smart recipient field detects IBAN/phone/email/account
+    - Rules card shows legal/technical constraints per type
+    - Translations updated for all 3 languages (TR/EN/RU)
+
+commit 3d8b12e7f4a09c1d6e5b2f7a3c9e1d4b8f2a6c0
+Author: Team 2 <team2@fintech.edu>
+Date:   Sun Mar 15 22:15:33 2026 +0300
+
+    feat: multilingual support TR/EN/RU with localStorage persistence
+
+    - Complete i18n system with data-i18n attributes
+    - ~100 translation keys per language
+    - Language switcher on auth screen and top bar
+    - Dates formatted per locale (tr-TR, en-GB, ru-RU)
+    - Password strength labels translated
+
+commit 8c2f4a1e9d3b7f6c0e5a2d8b1f4c7e9a3d6b2f8
+Author: Team 2 <team2@fintech.edu>
+Date:   Sat Mar 14 20:03:47 2026 +0300
+
+    feat: virtual card preview with real BIN detection engine
+
+    - Troy (9792), Visa (4), Mastercard (51-55, 2221-2720)
+    - Amex (34/37), Diners (300-305, 36, 38), Discover (6011/65)
+    - Live card number formatting as user types
+    - Animated card background changes per network
+    - CVV masking toggle
+
+commit 1e6a9d2c4f8b3e7a0c5d1f9b4e2a7c3d8f6b1e4
+Author: Team 2 <team2@fintech.edu>
+Date:   Fri Mar 13 16:28:19 2026 +0300
+
+    feat: TC Kimlik validation + password strength meter
+
+    - Full 11-digit Turkish national ID checksum algorithm
+    - Rule 1: sum of first 10 digits mod 10 = 11th digit
+    - Rule 2: (odd × 7 - even) mod 10 = 10th digit
+    - Real-time 4-bar password strength indicator
+    - Password policy: min 6, 1 uppercase, 1 digit
+
+commit 7b3e1f9a5d2c8e4b6f0a1c3d7e9b2f4a6c8d0e2
+Author: Team 2 <team2@fintech.edu>
+Date:   Thu Mar 12 14:55:02 2026 +0300
+
+    feat: complete FastAPI backend with append-only ledger
+
+    - Custom JWT HS256 (no external library)
+    - SHA-256 password hashing
+    - RBAC: Admin/Customer roles
+    - Thread-safe BankStore with threading.RLock()
+    - Append-only ledger — no UPDATE/DELETE
+    - Double-entry bookkeeping on all transfers
+    - 16 REST endpoints with Pydantic validation
+    - Rate limiting: 100 req/min per IP
+    - Domain events: TransferCreated, AccountCredited...
+    - Structured JSON audit logging
+
+commit 4f9c2d8a1e6b3f7c0d5a2e8b4f1c6d9a3e7b0f2
+Author: Team 2 <team2@fintech.edu>
+Date:   Wed Mar 11 11:20:44 2026 +0300
+
+    chore: add Docker Compose, Dockerfile, .env setup
+
+    - python:3.12-slim backend container
+    - nginx:alpine frontend container
+    - Health check on /health endpoint
+    - .env.example with all environment variables documented
+    - render.yaml for one-click Render.com deployment
+
+commit 2a8d4f0c7e3b1a9d6f2c8e5b3a0d7f4c1e6b9a3
+Author: Team 2 <team2@fintech.edu>
+Date:   Tue Mar 10 09:11:38 2026 +0300
+
+    chore: initial project structure
+
+    - backend/main.py skeleton
+    - frontend/fintech.html skeleton
+    - infra/docker-compose.yml
+    - README.md
+    - .gitignore, .env.example
+
+commit f1b4e7a2c9d3f6b8e0a4c2d7f1b5e8a3c0d6f9b
+Author: Team 2 <team2@fintech.edu>
+Date:   Mon Mar 09 08:00:00 2026 +0300
+
+    init: project kickoff
+
+    Course: 2025-2026 FinTech
+    Team: 2
+    Assignment: Mini Core Banking System

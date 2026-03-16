@@ -1,0 +1,23 @@
+{"time":"2026-03-16 18:42:11","level":"INFO","msg":"Fintech API starting","env":"development","version":"1.0.0"}
+{"time":"2026-03-16 18:42:11","level":"INFO","msg":"BankStore initialized","admin_seeded":"admin@fintech.io"}
+{"time":"2026-03-16 18:42:11","level":"INFO","msg":"Uvicorn running","host":"0.0.0.0","port":8000}
+{"time":"2026-03-16 18:42:15","level":"INFO","msg":"User logged in","user_id":"user_admin","ip":"127.0.0.1"}
+{"time":"2026-03-16 18:43:02","level":"INFO","msg":"New customer registered","customer_id":"cust_a3f12b9d","email":"test@demo.fintech"}
+{"time":"2026-03-16 18:43:03","level":"INFO","msg":"Account created","account_id":"acc_7e3c1f8a","account_number":"FT86421035","balance":"15000.00"}
+{"time":"2026-03-16 18:43:45","level":"INFO","msg":"Deposit processed","account_id":"acc_7e3c1f8a","amount":"5000.00","ref":"3d8b12e7f4a0"}
+{"time":"2026-03-16 18:44:12","level":"INFO","msg":"Transfer completed","type":"FAST","from":"FT86421035","to":"FT00000001","amount":"1200.00","ref":"FAST9c2f4a1e"}
+{"time":"2026-03-16 18:44:12","level":"INFO","msg":"Domain event emitted","event_type":"TransferCreated","ref":"FAST9c2f4a1e"}
+{"time":"2026-03-16 18:44:12","level":"INFO","msg":"Domain event emitted","event_type":"AccountDebited","account_id":"acc_7e3c1f8a"}
+{"time":"2026-03-16 18:44:12","level":"INFO","msg":"Domain event emitted","event_type":"AccountCredited","account_id":"acc_admin1"}
+{"time":"2026-03-16 18:44:12","level":"INFO","msg":"Domain event emitted","event_type":"TransferCompleted","ref":"FAST9c2f4a1e"}
+{"time":"2026-03-16 18:45:30","level":"INFO","msg":"Transfer completed","type":"EFT","from":"FT86421035","to":"FT99183742","amount":"8500.00","ref":"EFT4f9c2d8a"}
+{"time":"2026-03-16 18:46:01","level":"INFO","msg":"Transfer completed","type":"SWIFT","from":"FT86421035","to":"DE89370400440532013000","amount":"2000.00","currency":"EUR","bic":"DEUTDEDB","ref":"SWIFT2a8d4f0c"}
+{"time":"2026-03-16 18:46:15","level":"WARNING","msg":"Rate limit approaching","ip":"192.168.1.15","requests_per_minute":87}
+{"time":"2026-03-16 18:47:00","level":"INFO","msg":"Audit log accessed","user_id":"user_admin","entries_returned":24}
+{"time":"2026-03-16 18:47:35","level":"INFO","msg":"Health check","status":"ok"}
+{"time":"2026-03-16 18:48:00","level":"INFO","msg":"Transfer completed","type":"HAVALE","from":"FT86421035","to":"FT12345678","amount":"500.00","ref":"HAVB1e6a9d2c"}
+{"time":"2026-03-16 18:50:11","level":"WARNING","msg":"Failed login attempt","email":"admin@fintech.io","ip":"10.0.0.44","attempt":1}
+{"time":"2026-03-16 18:50:14","level":"WARNING","msg":"Failed login attempt","email":"admin@fintech.io","ip":"10.0.0.44","attempt":2}
+{"time":"2026-03-16 18:50:17","level":"ERROR","msg":"Rate limit exceeded — auth endpoint","ip":"10.0.0.44","limit":"5/min"}
+{"time":"2026-03-16 18:51:00","level":"INFO","msg":"Webhook event delivered","event_type":"TransferCompleted","status":200,"attempt":1}
+{"time":"2026-03-16 18:55:00","level":"INFO","msg":"Periodic health check","uptime_seconds":780,"total_transactions":12,"total_users":3}

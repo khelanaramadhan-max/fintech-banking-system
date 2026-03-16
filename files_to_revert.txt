@@ -1,0 +1,22 @@
+# ============================================================
+# Fintech — Files to Revert
+# List of files that were modified experimentally
+# and should be reverted if tests fail.
+#
+# Usage:
+#   git checkout -- $(cat files_to_revert.txt | grep -v '^#' | grep -v '^$')
+# ============================================================
+
+# Frontend — last major layout refactor
+frontend/fintech.html
+
+# Backend — transfer type handler
+backend/main.py
+
+# Infra — docker-compose tweaks
+docker-compose.yml
+
+# Styles — color variable experiments
+# (kept for reference, not committed)
+# frontend/fintech_dark_v2.html
+# frontend/fintech_light_experiment.html

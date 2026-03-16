@@ -1,0 +1,80 @@
+# ============================================================
+# Fintech — .gitignore
+# ============================================================
+
+# ── Environment & Secrets ────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.secret
+secrets/
+
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+.venv/
+venv/
+env/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# ── Node / Frontend ──────────────────────────────────────────
+node_modules/
+dist/
+.cache/
+.parcel-cache/
+.vite/
+*.local
+
+# ── Docker ───────────────────────────────────────────────────
+# (keep docker-compose files, ignore local overrides)
+docker-compose.override.yml
+
+# ── IDE ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
+log.txt
+log_dates.txt
+sync_output.txt
+git_log.txt
+
+# ── Testing ──────────────────────────────────────────────────
+.tox/
+test-results/
+junit.xml
+
+# ── Misc / Temp ──────────────────────────────────────────────
+*.tmp
+*.temp
+files_to_revert.txt
+query
+*.bat
+fix_css.py
+update_layouts.py
+trigger_sync.py
+create_test_account.py
