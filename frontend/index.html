@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -218,6 +217,36 @@ input,button,select{font-family:inherit;}
 .toast-info{background:var(--s3);border-left:3px solid var(--blue3);color:#93c5fd;}
 .empty{text-align:center;padding:48px 20px;}.empty-ico{font-size:2.8rem;margin-bottom:12px;opacity:.4;}.empty-txt{font-size:.84rem;color:var(--text3);}
 @media(max-width:768px){.sidebar{display:none;}.main{padding:16px;}.pay-layout,.g2{grid-template-columns:1fr;}.quick-grid{grid-template-columns:repeat(2,1fr);}}
+
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+.stripe-step{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.stripe-step:last-child{border-bottom:none}
+.stripe-step-num{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#635bff,#00d4ff);display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:800;color:#fff;flex-shrink:0}
+.stripe-step-title{font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.stripe-step-desc{font-size:.72rem;color:var(--text2);line-height:1.5}
+.stripe-test-card{background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r3);padding:10px 13px;display:flex;align-items:center;gap:10px}
+.stc-num{font-family:'Space Mono',monospace;font-size:.78rem;color:var(--text);letter-spacing:.04em;flex:1}
+.stc-copy{font-size:.65rem;color:var(--blue3);cursor:pointer;font-weight:700;font-family:'Space Mono',monospace;background:var(--s3);border:1px solid var(--bd);padding:2px 7px;border-radius:4px;white-space:nowrap}
+.stc-copy:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.stc-label{font-size:.62rem;color:var(--text3);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+
+/* ── TRANSFER STEPS ─────────────────────────────────────── */
+.tf-step-pill{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:20px;font-size:.78rem;font-weight:600;color:var(--text3);background:var(--s2);border:1.5px solid var(--bd);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.tf-step-pill.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 16px rgba(37,99,235,.35);}
+.tf-step-pill.done{background:var(--s3);color:var(--green2);border-color:var(--green2);}
+.tf-step-n{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:800;flex-shrink:0;}
+.tf-step-pill.on .tf-step-n{background:rgba(255,255,255,.25);}
+.tf-step-pill.done .tf-step-n::before{content:'✓';}
+.tf-step-arrow{color:var(--text4);font-size:1rem;padding:0 8px;flex-shrink:0;}
+
+/* ── STRIPE BUTTON ───────────────────────────────────────── */
+.btn-stripe-pay{width:100%;padding:15px;border:none;border-radius:var(--r3);background:linear-gradient(135deg,#635bff,#4f46e5);color:#fff;font-size:.92rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 20px rgba(99,91,255,.45);transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:.01em;}
+.btn-stripe-pay:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 8px 28px rgba(99,91,255,.55);}
+.btn-stripe-pay:active{transform:none;}
+.btn-stripe-pay::before{content:'🔒';font-size:1rem;}
+@keyframes stripeShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 </style>
 </head>
 <body>
@@ -498,76 +527,176 @@ input,button,select{font-family:inherit;}
       <div id="page-transfer" class="page">
         <div class="ph"><div class="pt" data-i18n="page_transfer"></div><div class="ps" data-i18n="page_transfer_sub"></div></div>
 
-        <!-- Transfer type selector -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px" id="tf-type-grid"></div>
-
-        <!-- Transfer info banner -->
-        <div id="tf-banner" style="background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r2);padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;font-size:.8rem;transition:all .3s">
-          <span id="tf-banner-ico" style="font-size:1.3rem">⇄</span>
-          <div><div id="tf-banner-title" style="font-weight:700;margin-bottom:2px"></div><div id="tf-banner-desc" style="color:var(--text2);font-size:.75rem"></div></div>
-          <div style="margin-left:auto;text-align:right"><div id="tf-banner-timing" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--blue3)"></div><div id="tf-banner-fee" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text3);margin-top:2px"></div></div>
+        <!-- Step indicator -->
+        <div style="display:flex;align-items:center;gap:0;margin-bottom:24px" id="tf-steps-bar">
+          <div class="tf-step-pill on" id="tsp-1" onclick="goTfStep(1)">
+            <span class="tf-step-n">1</span>
+            <span data-i18n="tf_step1"></span>
+          </div>
+          <div class="tf-step-arrow">→</div>
+          <div class="tf-step-pill" id="tsp-2">
+            <span class="tf-step-n">2</span>
+            <span data-i18n="tf_step2"></span>
+          </div>
+          <div class="tf-step-arrow">→</div>
+          <div class="tf-step-pill" id="tsp-3">
+            <span class="tf-step-n">3</span>
+            <span data-i18n="tf_step3"></span>
+          </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px">
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="new_transfer"></span><span id="tf-type-badge" class="bdg b-b" style="font-size:.58rem">FAST</span></div>
-            <div class="card-body">
-              <div class="fld"><label data-i18n="from_account"></label><select id="tf-from" onchange="updateTfInfo()"></select></div>
+        <!-- ══ STEP 1: Transfer details ══ -->
+        <div id="tf-panel-1">
+          <!-- Transfer type selector -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px" id="tf-type-grid"></div>
 
-              <!-- Recipient field — changes label based on type -->
-              <div class="fld">
-                <label id="tf-to-label" data-i18n="to_account"></label>
-                <div style="position:relative">
-                  <input type="text" id="tf-to" style="width:100%;background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s" oninput="validateTfTo()">
-                  <span id="tf-to-ico" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:.9rem"></span>
+          <!-- Transfer info banner -->
+          <div id="tf-banner" style="background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r2);padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;font-size:.8rem;transition:all .3s">
+            <span id="tf-banner-ico" style="font-size:1.3rem">⇄</span>
+            <div><div id="tf-banner-title" style="font-weight:700;margin-bottom:2px"></div><div id="tf-banner-desc" style="color:var(--text2);font-size:.75rem"></div></div>
+            <div style="margin-left:auto;text-align:right"><div id="tf-banner-timing" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--blue3)"></div><div id="tf-banner-fee" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text3);margin-top:2px"></div></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px">
+            <div class="card">
+              <div class="card-hd"><span class="card-title" data-i18n="new_transfer"></span><span id="tf-type-badge" class="bdg b-b" style="font-size:.58rem">FAST</span></div>
+              <div class="card-body">
+                <div class="fld"><label data-i18n="from_account"></label><select id="tf-from" onchange="updateTfInfo()"></select></div>
+                <div class="fld">
+                  <label id="tf-to-label" data-i18n="to_account"></label>
+                  <div style="position:relative">
+                    <input type="text" id="tf-to" style="width:100%;background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s" oninput="validateTfTo()">
+                    <span id="tf-to-ico" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:.9rem"></span>
+                  </div>
+                  <div id="tf-to-hint" style="font-size:.67rem;color:var(--text3);margin-top:4px"></div>
                 </div>
-                <div id="tf-to-hint" style="font-size:.67rem;color:var(--text3);margin-top:4px"></div>
-              </div>
-
-              <!-- SWIFT-only fields -->
-              <div id="tf-swift-fields" style="display:none">
+                <!-- SWIFT-only fields -->
+                <div id="tf-swift-fields" style="display:none">
+                  <div class="g2">
+                    <div class="fld"><label id="lbl-bic">BIC / SWIFT Code</label><input type="text" id="tf-bic" maxlength="11" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%;font-family:'Space Mono',monospace;letter-spacing:.05em" placeholder="e.g. AKBKTRIS"></div>
+                    <div class="fld"><label id="lbl-currency">Currency</label>
+                      <select id="tf-currency" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 28px 11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%;appearance:none">
+                        <option value="USD">🇺🇸 USD</option><option value="EUR">🇪🇺 EUR</option>
+                        <option value="GBP">🇬🇧 GBP</option><option value="CHF">🇨🇭 CHF</option>
+                        <option value="JPY">🇯🇵 JPY</option><option value="AED">🇦🇪 AED</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="fld"><label id="lbl-beneficiary-name">Beneficiary Name</label><input type="text" id="tf-ben-name" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%"></div>
+                  <div class="fld"><label id="lbl-beneficiary-bank">Beneficiary Bank Name</label><input type="text" id="tf-ben-bank" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%"></div>
+                </div>
                 <div class="g2">
-                  <div class="fld"><label id="lbl-bic">BIC / SWIFT Code</label><input type="text" id="tf-bic" maxlength="11" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%;font-family:'Space Mono',monospace;letter-spacing:.05em" placeholder="e.g. AKBKTRIS"></div>
-                  <div class="fld"><label id="lbl-currency">Currency</label>
-                    <select id="tf-currency" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 28px 11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%237a90b8' viewBox='0 0 20 20'%3E%3Cpath d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:16px">
-                      <option value="USD">🇺🇸 USD — US Dollar</option>
-                      <option value="EUR">🇪🇺 EUR — Euro</option>
-                      <option value="GBP">🇬🇧 GBP — British Pound</option>
-                      <option value="CHF">🇨🇭 CHF — Swiss Franc</option>
-                      <option value="JPY">🇯🇵 JPY — Japanese Yen</option>
-                      <option value="CAD">🇨🇦 CAD — Canadian Dollar</option>
-                      <option value="AED">🇦🇪 AED — UAE Dirham</option>
-                    </select>
+                  <div class="fld"><label data-i18n="amount"></label><input type="number" id="tf-amt" min="0.01" step="0.01" oninput="checkFastLimit(parseFloat(this.value)||0)"></div>
+                  <div class="fld"><label data-i18n="description"></label><input type="text" id="tf-desc"></div>
+                </div>
+                <div id="tf-limit-warn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--r3);padding:9px 13px;font-size:.76rem;color:#fbbf24;margin-bottom:10px"></div>
+                <div class="fm"><button class="btn btn-p" onclick="tfNextStep()" data-i18n="tf_continue_btn"></button></div>
+                <div class="mb" id="tf-msg"></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div class="card">
+                <div class="card-hd"><span class="card-title" data-i18n="sender_info"></span></div>
+                <div class="card-body"><div id="tf-info" style="font-size:.83rem;color:var(--text2);line-height:2.1" data-i18n="select_account"></div></div>
+              </div>
+              <div class="card" id="tf-rules-card">
+                <div class="card-hd"><span class="card-title" id="tf-rules-title">Transfer Rules</span></div>
+                <div class="card-body" id="tf-rules-body" style="font-size:.78rem;color:var(--text2);line-height:2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ STEP 2: Card Information ══ -->
+        <div id="tf-panel-2" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:20px">
+            <!-- Virtual card preview -->
+            <div>
+              <div class="card">
+                <div class="card-hd"><span class="card-title" data-i18n="card_preview"></span></div>
+                <div class="card-body">
+                  <div class="vcard vc-d" id="tf-vc">
+                    <div class="vc-grid"></div><div class="vc-shine"></div>
+                    <div class="vc-top"><div class="vc-bank">Fintech</div><div class="vc-chip"></div></div>
+                    <div class="vc-num" id="tf-vcn">•••• &nbsp;•••• &nbsp;•••• &nbsp;••••</div>
+                    <div class="vc-bot">
+                      <div><div class="vc-hlbl" data-i18n="cardholder"></div><div class="vc-hnam" id="tf-vcname">— — —</div></div>
+                      <div style="text-align:right"><div class="vc-elbl" data-i18n="expiry_short"></div><div class="vc-eval" id="tf-vcexp">MM/YY</div></div>
+                      <div class="vc-logo" id="tf-vclogo"></div>
+                    </div>
+                  </div>
+                  <div class="net-pill" style="margin-top:12px"><div class="np-ico">💳</div><div><div class="np-lbl" data-i18n="card_network"></div><div class="np-name np-none" id="tf-netname" data-i18n="enter_card"></div></div></div>
+                </div>
+              </div>
+            </div>
+            <!-- Card form -->
+            <div class="card">
+              <div class="card-hd"><span class="card-title" data-i18n="tf_card_title"></span></div>
+              <div class="card-body">
+                <!-- Transfer summary mini-banner -->
+                <div id="tf-summary-banner" style="background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r3);padding:12px 14px;margin-bottom:16px;font-size:.8rem"></div>
+                <div class="fld">
+                  <label data-i18n="card_number"></label>
+                  <div class="cin"><input type="text" id="tf-card" maxlength="19" oninput="onCard(this,'tf')" autocomplete="cc-number"><div class="cin-logo" id="tf-clogo"></div></div>
+                </div>
+                <div class="fld"><label data-i18n="cardholder"></label><input type="text" id="tf-cname" oninput="syncV('tf-vcname',this.value.toUpperCase()||'— — —')"></div>
+                <div class="g2">
+                  <div class="fld"><label data-i18n="expiry"></label><input type="text" id="tf-exp" maxlength="5" oninput="fmtExp(this);syncV('tf-vcexp',this.value||'MM/YY')"></div>
+                  <div class="fld"><label>CVV</label><input type="password" id="tf-cvv" maxlength="4"></div>
+                </div>
+                <div class="fm" style="gap:10px">
+                  <button class="btn btn-g" onclick="goTfStep(1)" data-i18n="btn_back"></button>
+                  <button class="btn btn-p" onclick="tfNextStep()" data-i18n="tf_review_btn" style="flex:1"></button>
+                </div>
+                <div class="mb" id="tf-card-msg"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ STEP 3: Review & Confirm ══ -->
+        <div id="tf-panel-3" style="display:none">
+          <div style="max-width:580px;margin:0 auto">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-hd"><span class="card-title" data-i18n="tf_review_title"></span></div>
+              <div class="card-body">
+                <div id="tf-review-body" style="font-size:.84rem;line-height:2.4;color:var(--text2)"></div>
+              </div>
+            </div>
+
+            <!-- Stripe payment option -->
+            <div class="card" style="border:1.5px solid rgba(99,91,255,.35);background:linear-gradient(135deg,rgba(99,91,255,.06),rgba(0,212,255,.04));margin-bottom:16px">
+              <div class="card-body" style="padding:22px 24px">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+                  <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#635bff,#00d4ff);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;box-shadow:0 4px 16px rgba(99,91,255,.35)">🔒</div>
+                  <div>
+                    <div style="font-weight:700;font-size:.92rem;margin-bottom:3px" data-i18n="stripe_cta_title"></div>
+                    <div style="font-size:.75rem;color:var(--text2)" data-i18n="stripe_cta_sub"></div>
+                  </div>
+                  <div style="margin-left:auto">
+                    <svg viewBox="0 0 60 25" style="height:20px;fill:#635bff" xmlns="http://www.w3.org/2000/svg"><path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a8.33 8.33 0 0 1-4.56 1.1c-4.01 0-6.83-2.03-6.83-7.35 0-4.01 2.26-7.35 6.28-7.35 4.04 0 5.99 3.09 5.99 7.06 0 .5-.08 1.37-.07 1.62zM51.64 11.4c0-1.77.76-3.21 2.59-3.21 1.78 0 2.53 1.41 2.53 3.21H51.64zM37.45 0l-3.72.79V3.6h-1.98v3.31h1.98v6.22c0 3.31 1.65 4.44 4.84 4.44.5 0 1.01-.07 1.52-.14v-3.27c-.4.07-.73.11-1.02.11-1.06 0-1.62-.36-1.62-1.54V6.91h2.64V3.6h-2.64V0zm-9.32 17.24h4.33V3.6h-4.33v13.64zm2.17-15.44a2.17 2.17 0 1 0 0-4.34 2.17 2.17 0 0 0 0 4.34zM16.97 17.24h4.31V9.45c.73-.86 1.93-1.39 3.34-1.39.44 0 .84.05 1.17.12V3.73c-.31-.06-.65-.09-1-.09-1.57 0-2.95.65-3.6 1.71h-.07V3.6h-4.15v13.64zm-7.17 0c2.35 0 3.77-.94 4.46-2.24h.07v1.98h4.11V8.75C18.44 5.27 16.11 3.3 12 3.3c-3.81 0-6.42 1.86-6.86 5.05l3.97.44c.22-1.29 1.07-2.08 2.79-2.08 1.66 0 2.42.72 2.42 2.12v.33l-3.29.28c-3.32.28-5.67 1.77-5.67 4.73 0 2.84 2.17 4.35 5.24 4.35zm1.07-3.22c-1.08 0-1.86-.57-1.86-1.54 0-1.03.73-1.57 2.23-1.75l2.14-.22v.51c0 1.74-1.07 3-2.51 3zM0 17.24h4.3V0H0v17.24z"/></svg>
                   </div>
                 </div>
-                <div class="fld"><label id="lbl-beneficiary-name">Beneficiary Name</label><input type="text" id="tf-ben-name" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%"></div>
-                <div class="fld"><label id="lbl-beneficiary-bank">Beneficiary Bank Name</label><input type="text" id="tf-ben-bank" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%"></div>
+                <!-- Test card hint -->
+                <div style="background:rgba(99,91,255,.08);border:1px solid rgba(99,91,255,.2);border-radius:var(--r3);padding:10px 14px;margin-bottom:16px;font-size:.76rem;color:var(--text2)">
+                  <div style="font-weight:700;color:#a78bfa;margin-bottom:4px" data-i18n="stripe_test_hint_title"></div>
+                  <div style="font-family:'Space Mono',monospace;font-size:.75rem;color:var(--text);letter-spacing:.04em;margin-bottom:3px">4242 4242 4242 4242</div>
+                  <div style="font-size:.68rem;color:var(--text3)" data-i18n="stripe_test_hint_sub"></div>
+                  <button onclick="copyCard4242(this)" style="margin-top:7px;background:var(--s3);border:1px solid var(--bd2);color:var(--blue3);font-size:.65rem;font-weight:700;font-family:'Space Mono',monospace;padding:3px 10px;border-radius:4px;cursor:pointer" data-i18n="stripe_copy_card"></button>
+                </div>
+                <button class="btn-stripe-pay" onclick="confirmAndPay()" data-i18n="stripe_pay_btn"></button>
+                <div style="text-align:center;margin-top:10px;font-size:.68rem;color:var(--text3)" data-i18n="stripe_secure_note"></div>
               </div>
-
-              <div class="g2">
-                <div class="fld"><label data-i18n="amount"></label><input type="number" id="tf-amt" min="0.01" step="0.01" oninput="checkFastLimit(parseFloat(this.value)||0)"></div>
-                <div class="fld"><label data-i18n="description"></label><input type="text" id="tf-desc"></div>
-              </div>
-
-              <!-- FAST limit warning -->
-              <div id="tf-limit-warn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--r3);padding:9px 13px;font-size:.76rem;color:#fbbf24;margin-bottom:10px"></div>
-
-              <div class="fm"><button class="btn btn-p" onclick="doTransfer()" id="tf-submit-btn" data-i18n="btn_send"></button></div>
-              <div class="mb" id="tf-msg"></div>
             </div>
-          </div>
 
-          <div style="display:flex;flex-direction:column;gap:14px">
-            <div class="card">
-              <div class="card-hd"><span class="card-title" data-i18n="sender_info"></span></div>
-              <div class="card-body"><div id="tf-info" style="font-size:.83rem;color:var(--text2);line-height:2.1" data-i18n="select_account"></div></div>
+            <div class="fm" style="justify-content:space-between">
+              <button class="btn btn-g" onclick="goTfStep(2)" data-i18n="btn_back"></button>
+              <button class="btn btn-g btn-sm" onclick="confirmInternal()" data-i18n="tf_internal_only"></button>
             </div>
-            <div class="card" id="tf-rules-card">
-              <div class="card-hd"><span class="card-title" id="tf-rules-title">Transfer Rules</span></div>
-              <div class="card-body" id="tf-rules-body" style="font-size:.78rem;color:var(--text2);line-height:2"></div>
-            </div>
+            <div class="mb" id="tf-confirm-msg" style="margin-top:12px"></div>
           </div>
         </div>
+
       </div>
 
       <!-- HISTORY -->
@@ -651,6 +780,8 @@ input,button,select{font-family:inherit;}
         </div>
       </div>
 
+
+
     </main>
   </div>
 </div>
@@ -699,6 +830,23 @@ const T = {
     nav_users:'Kullanıcılar', nav_audit:'Denetim Kaydı', nav_profile:'Profil',
     sb_grp_general:'Genel', sb_grp_banking:'Bankacılık', sb_grp_admin:'Admin', sb_grp_account:'Hesabım',
     btn_logout:'Çıkış',
+    /* stripe-transfer */
+    tf_step1:'Detaylar', tf_step2:'Kart Bilgileri', tf_step3:'Onayla',
+    tf_continue_btn:'Devam Et →',
+    tf_card_title:'Kart Bilgileri',
+    tf_review_btn:'İncele →',
+    tf_review_title:'Transfer Özeti',
+    btn_back:'← Geri',
+    tf_internal_only:'Sadece Dahili Transfer',
+    stripe_cta_title:'Stripe ile Güvenli Ödeme',
+    stripe_cta_sub:'Ödemeyi Stripe güvenli altyapısı üzerinden tamamlayın',
+    stripe_test_hint_title:'🧪 Test Modu — Test Kartı:',
+    stripe_test_hint_sub:'Herhangi bir gelecek tarih · herhangi bir 3 haneli CVV',
+    stripe_copy_card:'Kopyala',
+    stripe_pay_btn:'Stripe ile Öde',
+    stripe_secure_note:'🔒 256-bit SSL şifrelemesi · Stripe PCI DSS uyumlu',
+    tf_from_lbl:'Gönderen', tf_to_lbl:'Alıcı', tf_type_lbl:'Tür',
+    tf_amt_lbl:'Tutar', tf_ref_lbl:'Ref No', tf_card_lbl:'Kart',
     /* pages */
     page_dashboard:'Dashboard', page_dashboard_sub:'Finansal durumunuza genel bakış',
     page_accounts:'Hesaplarım', page_accounts_sub:'Banka hesaplarınızı yönetin',
@@ -816,6 +964,23 @@ const T = {
     nav_users:'Users', nav_audit:'Audit Log', nav_profile:'Profile',
     sb_grp_general:'General', sb_grp_banking:'Banking', sb_grp_admin:'Admin', sb_grp_account:'My Account',
     btn_logout:'Sign Out',
+    /* stripe-transfer */
+    tf_step1:'Details', tf_step2:'Card Info', tf_step3:'Confirm',
+    tf_continue_btn:'Continue →',
+    tf_card_title:'Card Information',
+    tf_review_btn:'Review →',
+    tf_review_title:'Transfer Summary',
+    btn_back:'← Back',
+    tf_internal_only:'Internal Transfer Only',
+    stripe_cta_title:'Secure Payment via Stripe',
+    stripe_cta_sub:'Complete your payment through Stripe secure infrastructure',
+    stripe_test_hint_title:'🧪 Test Mode — Test Card:',
+    stripe_test_hint_sub:'Any future date · any 3-digit CVV',
+    stripe_copy_card:'Copy',
+    stripe_pay_btn:'Pay with Stripe',
+    stripe_secure_note:'🔒 256-bit SSL encryption · Stripe PCI DSS compliant',
+    tf_from_lbl:'From', tf_to_lbl:'To', tf_type_lbl:'Type',
+    tf_amt_lbl:'Amount', tf_ref_lbl:'Ref No', tf_card_lbl:'Card',
     page_dashboard:'Dashboard', page_dashboard_sub:'Your financial overview',
     page_accounts:'My Accounts', page_accounts_sub:'Manage your bank accounts',
     page_topup:'Top Up', page_topup_sub:'Add funds to your account via card',
@@ -922,6 +1087,23 @@ const T = {
     nav_users:'Пользователи', nav_audit:'Журнал аудита', nav_profile:'Профиль',
     sb_grp_general:'Общее', sb_grp_banking:'Банкинг', sb_grp_admin:'Админ', sb_grp_account:'Мой аккаунт',
     btn_logout:'Выйти',
+    /* stripe-transfer */
+    tf_step1:'Детали', tf_step2:'Данные карты', tf_step3:'Подтверждение',
+    tf_continue_btn:'Продолжить →',
+    tf_card_title:'Данные карты',
+    tf_review_btn:'Проверить →',
+    tf_review_title:'Сводка перевода',
+    btn_back:'← Назад',
+    tf_internal_only:'Только внутренний перевод',
+    stripe_cta_title:'Безопасная оплата через Stripe',
+    stripe_cta_sub:'Завершите платёж через защищённую инфраструктуру Stripe',
+    stripe_test_hint_title:'🧪 Тестовый режим — Тестовая карта:',
+    stripe_test_hint_sub:'Любая будущая дата · любые 3 цифры CVV',
+    stripe_copy_card:'Копировать',
+    stripe_pay_btn:'Оплатить через Stripe',
+    stripe_secure_note:'🔒 256-битное SSL-шифрование · Stripe соответствует PCI DSS',
+    tf_from_lbl:'Отправитель', tf_to_lbl:'Получатель', tf_type_lbl:'Тип',
+    tf_amt_lbl:'Сумма', tf_ref_lbl:'Реф. номер', tf_card_lbl:'Карта',
     page_dashboard:'Главная', page_dashboard_sub:'Обзор вашего финансового состояния',
     page_accounts:'Мои счета', page_accounts_sub:'Управление банковскими счетами',
     page_topup:'Пополнить счёт', page_topup_sub:'Пополните счёт с помощью карты',
@@ -1085,8 +1267,21 @@ function refreshApp(){
   if(curPage){const loaders={dashboard:loadDashboard,accounts:loadAccounts,topup:loadTopUp,payment:loadPayment,transfer:loadTransfer,history:renderHistory,profile:loadProfile,users:renderUsers,audit:renderAudit};if(loaders[curPage])loaders[curPage]();}
 }
 
-/* ═══ DATA STORE ═══ */
+/* ═══ SUPABASE CONFIG ═══ */
+const SUPA_URL='https://llchohlypyizjrzuypxr.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxsY2hvaGx5cHlpempyenV5cHhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjkwNjEsImV4cCI6MjA4OTI0NTA2MX0.THTxZkZ7Rc1pPvH1V3WGmLz4lGtfhyRYBbEBKlIHoPU';
+
+let _sb=null;
+async function sb(){
+  if(_sb)return _sb;
+  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  _sb=createClient(SUPA_URL,SUPA_KEY);
+  return _sb;
+}
+
+/* ═══ DATA STORE — Supabase + localStorage cache ═══ */
 const DB={
+  /* --- sync cache getters (localStorage) --- */
   get users(){return JSON.parse(localStorage.getItem('ft_users')||'[]');},
   get accounts(){return JSON.parse(localStorage.getItem('ft_accounts')||'[]');},
   get ledger(){return JSON.parse(localStorage.getItem('ft_ledger')||'[]');},
@@ -1095,16 +1290,51 @@ const DB={
   setAccounts(v){localStorage.setItem('ft_accounts',JSON.stringify(v));},
   setLedger(v){localStorage.setItem('ft_ledger',JSON.stringify(v));},
   setAudit(v){localStorage.setItem('ft_audit',JSON.stringify(v));},
+  /* --- async Supabase methods --- */
+  async fetchUsers(){
+    try{const c=await sb();const{data}=await c.from('ft_users').select('*');if(data){this.setUsers(data.map(SB.mapUser));return data.map(SB.mapUser);}return this.users;}
+    catch(e){console.warn('SB fetchUsers',e);return this.users;}
+  },
+  async fetchAccounts(userId){
+    try{const c=await sb();let q=c.from('ft_accounts').select('*');if(userId)q=q.eq('user_id',userId);const{data}=await q;if(data){const mapped=data.map(SB.mapAcc);this.setAccounts(merged(this.accounts,mapped));return mapped;}return userId?this.accounts.filter(a=>a.userId===userId):this.accounts;}
+    catch(e){console.warn('SB fetchAccounts',e);return userId?this.accounts.filter(a=>a.userId===userId):this.accounts;}
+  },
+  async fetchLedger(userId){
+    try{
+      const c=await sb();
+      const accs=await this.fetchAccounts(userId);
+      const ids=accs.map(a=>a.id);
+      if(!ids.length)return[];
+      const{data}=await c.from('ft_ledger').select('*').in('account_id',ids).order('created_at',{ascending:false}).limit(200);
+      if(data){const mapped=data.map(SB.mapLedger);this.setLedger(mapped);return mapped;}
+      return this.ledger;
+    }catch(e){console.warn('SB fetchLedger',e);return this.ledger;}
+  },
+  async fetchAudit(){
+    try{const c=await sb();const{data}=await c.from('ft_audit').select('*').order('created_at',{ascending:false}).limit(200);if(data){const mapped=data.map(SB.mapAudit);this.setAudit(mapped);return mapped;}return this.audit;}
+    catch(e){console.warn('SB fetchAudit',e);return this.audit;}
+  },
 };
+
+/* row mappers — Supabase snake_case → app camelCase */
+const SB={
+  mapUser:r=>({id:r.id,name:r.name,email:r.email,password:r.password,tcno:r.tcno,phone:r.phone,role:r.role,createdAt:r.created_at}),
+  mapAcc:r=>({id:r.id,userId:r.user_id,number:r.number,type:r.type,balance:parseFloat(r.balance),color:r.color||'ac-blue',createdAt:r.created_at}),
+  mapLedger:r=>({id:r.id,accountId:r.account_id,type:r.type,amount:parseFloat(r.amount),balanceAfter:parseFloat(r.balance_after),desc:r.description,ref:r.ref,performedBy:r.performed_by,createdAt:r.created_at}),
+  mapAudit:r=>({id:r.id,userId:r.user_id,action:r.action,detail:r.detail,outcome:r.outcome,createdAt:r.created_at}),
+};
+
+function merged(local,remote){const m={};[...local,...remote].forEach(x=>m[x.id]=x);return Object.values(m);}
+
 function uid(){return Math.random().toString(36).slice(2,10);}
 function nowISO(){return new Date().toISOString();}
 function fmtDate(iso){return new Date(iso).toLocaleString(LANG==='ru'?'ru-RU':LANG==='en'?'en-GB':'tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 
+/* Seed localStorage only if completely empty (Supabase is seeded via SQL) */
 (function seed(){
   if(DB.users.length)return;
   DB.setUsers([{id:'user_admin',name:'Sistem Yöneticisi',email:'admin@fintech.io',password:'Admin123!',tcno:'12345678901',phone:'+90 555 000 00 00',role:'admin',createdAt:nowISO()}]);
   DB.setAccounts([{id:'acc_admin1',userId:'user_admin',number:'FT00000001',type:'Vadesiz',balance:50000,createdAt:nowISO(),color:'ac-violet'}]);
-  DB.setLedger([{id:'l0',accountId:'acc_admin1',type:'CREDIT',amount:50000,balanceAfter:50000,desc:'Initial balance',ref:'REF000001',performedBy:'system',createdAt:nowISO()}]);
 })();
 
 let CU=null;
@@ -1211,15 +1441,22 @@ function vPw(){
 function vPw2(){const p=document.getElementById('r-pass').value,p2=document.getElementById('r-pass2').value;setV('r-pass2','ico-pass2','err-pass2',null,p===p2&&p2.length>0,t('err_pw2'));}
 
 /* ═══ LOGIN / REGISTER / LOGOUT ═══ */
-function doLogin(){
+async function doLogin(){
   const em=document.getElementById('l-email').value.trim().toLowerCase();
   const pw=document.getElementById('l-pass').value;
   if(!em||!pw){showGErr(t('err_fill_all'));return;}
-  const u=DB.users.find(x=>x.email.toLowerCase()===em&&x.password===pw);
+  /* Try Supabase first, fall back to local cache */
+  let u=null;
+  try{
+    const c=await sb();
+    const{data}=await c.from('ft_users').select('*').eq('email',em).single();
+    if(data&&data.password===pw){u=SB.mapUser(data);}
+  }catch(_){}
+  if(!u){u=DB.users.find(x=>x.email.toLowerCase()===em&&x.password===pw);}
   if(!u){showGErr(t('err_invalid_creds'));return;}
   loginUser(u);
 }
-function doRegister(){
+async function doRegister(){
   const name=document.getElementById('r-name').value.trim();
   const phone=document.getElementById('r-phone').value.trim();
   const email=document.getElementById('r-email').value.trim().toLowerCase();
@@ -1234,13 +1471,26 @@ function doRegister(){
   const perrs=validatePw(pw);if(perrs.length){showGErr(t('err_pw_prefix')+perrs.join(', '));return;}
   if(pw!==pw2){showGErr(t('err_pw2'));return;}
   if(!kvkk){showGErr(t('err_kvkk'));return;}
-  const users=DB.users;
-  if(users.find(x=>x.email.toLowerCase()===email)){showGErr(t('err_email_taken'));return;}
-  if(users.find(x=>x.tcno===tc)){showGErr(t('err_tc_taken'));return;}
-  const u={id:'user_'+uid(),name,email,password:pw,tcno:tc,phone,role:'customer',createdAt:nowISO()};
-  users.push(u);DB.setUsers(users);
-  const ac={id:'acc_'+uid(),userId:u.id,number:'FT'+Date.now().toString().slice(-8),type:'Vadesiz',balance:0,createdAt:nowISO(),color:'ac-blue'};
-  const accounts=DB.accounts;accounts.push(ac);DB.setAccounts(accounts);
+  /* Check duplicates */
+  const localUsers=DB.users;
+  if(localUsers.find(x=>x.email.toLowerCase()===email)){showGErr(t('err_email_taken'));return;}
+  if(localUsers.find(x=>x.tcno===tc)){showGErr(t('err_tc_taken'));return;}
+  const newId='user_'+uid();
+  const u={id:newId,name,email,password:pw,tcno:tc,phone,role:'customer',createdAt:nowISO()};
+  /* Insert to Supabase */
+  try{
+    const c=await sb();
+    /* check remote duplicate */
+    const{data:dup}=await c.from('ft_users').select('id').eq('email',email);
+    if(dup&&dup.length){showGErr(t('err_email_taken'));return;}
+    await c.from('ft_users').insert({id:u.id,name,email,password:pw,tcno:tc,phone,role:'customer'});
+    const accId='acc_'+uid(),accNum='FT'+Date.now().toString().slice(-8);
+    await c.from('ft_accounts').insert({id:accId,user_id:u.id,number:accNum,type:'Vadesiz',balance:0,color:'ac-blue'});
+    await c.from('ft_ledger').insert({id:'l_'+uid(),account_id:accId,type:'CREDIT',amount:0.01,balance_after:0,description:'Account opened',ref:'REF'+uid().toUpperCase(),performed_by:u.id});
+    const ac={id:accId,userId:u.id,number:accNum,type:'Vadesiz',balance:0,createdAt:nowISO(),color:'ac-blue'};
+    const accounts=DB.accounts;accounts.push(ac);DB.setAccounts(accounts);
+  }catch(e){console.warn('Supabase register failed, using local',e);}
+  localUsers.push(u);DB.setUsers(localUsers);
   addAudit(u.id,'REGISTER','New user: '+name,'SUCCESS');
   toast(t('toast_registered'),'ok');
   loginUser(u);
@@ -1258,6 +1508,11 @@ function loginUser(u){
   document.getElementById('screen-auth').classList.remove('show');
   document.getElementById('screen-app').classList.add('show');
   applyTranslations();
+  /* Hydrate local cache from Supabase in background */
+  DB.fetchAccounts(u.role==='admin'?undefined:u.id).then(accs=>{
+    DB.setAccounts(accs);
+    DB.fetchLedger(u.id).then(led=>DB.setLedger(led));
+  }).catch(()=>{});
   goPage('dashboard');
   toast(t('toast_welcome')+u.name.split(' ')[0]+'! 👋','ok');
 }
@@ -1268,1661 +1523,15 @@ function doLogout(){
   document.getElementById('screen-auth').classList.add('show');
   document.getElementById('admin-nav').style.display='none';
 }
-(function autoLogin(){const sid=sessionStorage.getItem('ft_sess');if(sid){const u=DB.users.find(x=>x.id===sid);if(u){loginUser(u);}}})();
-
-/* ═══ NAVIGATION ═══ */
-function goPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-it').forEach(n=>n.classList.remove('on'));
-  const pg=document.getElementById('page-'+name);if(pg)pg.classList.add('active');
-  document.querySelectorAll('.sb-it').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+name+"'"))n.classList.add('on');});
-  const L={dashboard:loadDashboard,accounts:loadAccounts,topup:loadTopUp,payment:loadPayment,transfer:loadTransfer,history:renderHistory,profile:loadProfile,users:renderUsers,audit:renderAudit};
-  if(L[name])L[name]();
-}
-
-/* ═══ ACCOUNTS ═══ */
-function myAccs(){if(!CU)return[];const a=DB.accounts;return CU.role==='admin'?a:a.filter(x=>x.userId===CU.id);}
-const AC=['ac-blue','ac-teal','ac-violet'];
-function accCard(a){
-  return`<div class="acc-card ${a.color||'ac-blue'}" onclick="goPage('history')">
-    <div class="ac-top"><div><div class="ac-lbl">${t('account')}</div><div class="ac-num">${a.number}</div></div><div style="opacity:.3;font-size:1.3rem">▣</div></div>
-    <div><div class="ac-lbl" style="margin-bottom:3px">${t('balance')}</div><div class="ac-bal">${fmt(a.balance)}</div><div class="ac-sub">${a.type} · ${a.id}</div></div>
-  </div>`;
-}
-function loadAccounts(){const a=myAccs();const el=document.getElementById('accs-list');if(!el)return;el.innerHTML=a.length?a.map(accCard).join(''):`<div class="empty"><div class="empty-ico">💳</div><div class="empty-txt">${t('no_accounts')}</div></div>`;}
-function buildSel(id){const sel=document.getElementById(id);if(!sel)return;sel.innerHTML=myAccs().map(a=>`<option value="${a.id}">${a.number} — ${fmt(a.balance)} (${a.type})</option>`).join('');}
-function createAccount(){
-  const type=document.getElementById('acc-type').value;
-  const bal=parseFloat(document.getElementById('acc-bal').value)||0;
-  if(bal<0){showMsg('acc-msg',t('err_valid_amount'),'err');return;}
-  const a={id:'acc_'+uid(),userId:CU.id,number:'FT'+Date.now().toString().slice(-8),type,balance:bal,createdAt:nowISO(),color:AC[myAccs().length%3]};
-  const accs=DB.accounts;accs.push(a);DB.setAccounts(accs);
-  if(bal>0)appendLedger(a.id,'CREDIT',bal,bal,'Initial balance','system');
-  addAudit(CU.id,'OPEN_ACCOUNT',type+': '+a.number,'SUCCESS');
-  showMsg('acc-msg',t('msg_acc_opened')+a.number,'ok');
-  toast(t('toast_account_opened')+a.number,'ok');
-  loadAccounts();loadDashboard();
-}
-
-/* ═══ LEDGER ═══ */
-function appendLedger(accId,type,amount,balAfter,desc,by,ref){
-  const l=DB.ledger;l.push({id:'l_'+uid(),accountId:accId,type,amount,balanceAfter:balAfter,desc,ref:ref||'REF'+uid().toUpperCase(),performedBy:by,createdAt:nowISO()});DB.setLedger(l);
-}
-function addAudit(uid2,action,detail,outcome){const a=DB.audit;a.push({id:'a_'+uid(),userId:uid2,action,detail,outcome,createdAt:nowISO()});DB.setAudit(a);}
-
-/* ═══ DASHBOARD ═══ */
-function loadDashboard(){
-  const accs=myAccs(),tot=accs.reduce((s,a)=>s+a.balance,0);
-  const ids=accs.map(a=>a.id),led=DB.ledger.filter(e=>ids.includes(e.accountId));
-  const cred=led.filter(e=>e.type==='CREDIT').reduce((s,e)=>s+e.amount,0);
-  const deb=led.filter(e=>e.type==='DEBIT').reduce((s,e)=>s+e.amount,0);
-  document.getElementById('dash-stats').innerHTML=`
-    <div class="stat"><div class="stat-ico">💰</div><div class="stat-lbl">${t('stat_total_balance')}</div><div class="stat-val">${fmt(tot)}</div></div>
-    <div class="stat"><div class="stat-ico">📥</div><div class="stat-lbl">${t('stat_total_in')}</div><div class="stat-val" style="color:#34d399">${fmt(cred)}</div></div>
-    <div class="stat"><div class="stat-ico">📤</div><div class="stat-lbl">${t('stat_total_out')}</div><div class="stat-val" style="color:#f87171">${fmt(deb)}</div></div>
-    <div class="stat"><div class="stat-ico">💳</div><div class="stat-lbl">${t('stat_accounts')}</div><div class="stat-val">${accs.length}</div></div>
-  `;
-  const da=document.getElementById('dash-accs');
-  if(da)da.innerHTML=accs.slice(0,3).map(accCard).join('')||`<div class="empty"><div class="empty-ico">💳</div><div class="empty-txt">${t('no_accounts')}</div></div>`;
-  renderRecentTx();
-  // refresh i18n
-  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.getAttribute('data-i18n')));
-}
-function renderRecentTx(){
-  const ids=myAccs().map(a=>a.id);
-  const en=DB.ledger.filter(e=>ids.includes(e.accountId)).slice(-10).reverse();
-  const el=document.getElementById('dash-txs');if(!el)return;
-  if(!en.length){el.innerHTML=`<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">${t('no_tx')}</div></div>`;return;}
-  el.innerHTML=en.map(e=>`<div class="tx-row"><div class="tx-ico ${e.type==='CREDIT'?'c':'d'}">${e.type==='CREDIT'?'⬇':'⬆'}</div><div class="tx-info"><div class="tx-desc">${e.desc}</div><div class="tx-meta">${e.ref}</div></div><div style="text-align:right"><div class="tx-amt ${e.type==='CREDIT'?'amt-c':'amt-d'}">${e.type==='CREDIT'?'+':'-'}${fmt(e.amount)}</div><div class="tx-date">${fmtDate(e.createdAt)}</div></div></div>`).join('');
-}
-
-/* ═══ TOP UP ═══ */
-function loadTopUp(){buildSel('tu-acc');}
-function doTopUp(){
-  const accId=document.getElementById('tu-acc').value,card=document.getElementById('tu-card').value.replace(/\s/g,''),cname=document.getElementById('tu-cname').value.trim(),exp=document.getElementById('tu-exp').value.trim(),cvv=document.getElementById('tu-cvv').value.trim(),amt=parseFloat(document.getElementById('tu-amt').value);
-  if(!accId)return showMsg('tu-msg',t('err_select_acc'),'err');
-  if(card.length<13)return showMsg('tu-msg',t('err_valid_card'),'err');
-  if(!cname)return showMsg('tu-msg',t('err_valid_name'),'err');
-  if(!/^\d{2}\/\d{2}$/.test(exp))return showMsg('tu-msg',t('err_valid_exp'),'err');
-  if(cvv.length<3)return showMsg('tu-msg',t('err_valid_cvv'),'err');
-  if(isNaN(amt)||amt<1)return showMsg('tu-msg',t('err_min_amount'),'err');
-  const net=detectNet(card),nl=NET[net]?.name||'Card';
-  const accs=DB.accounts,a=accs.find(x=>x.id===accId);if(!a)return showMsg('tu-msg',t('err_not_found'),'err');
-  a.balance+=amt;DB.setAccounts(accs);
-  appendLedger(accId,'CREDIT',amt,a.balance,nl+t('msg_topup_via')+(document.getElementById('py-merchant')?.value||nl),CU.id);
-  addAudit(CU.id,'TOP_UP',fmt(amt)+' — '+nl,'SUCCESS');
-  showMsg('tu-msg',fmt(amt)+t('msg_topup_ok')+fmt(a.balance),'ok');
-  toast(fmt(amt)+t('toast_topup_ok'),'ok');
-  ['tu-card','tu-cname','tu-exp','tu-cvv','tu-amt'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['tu-vcn','tu-vcname','tu-vcexp'].forEach((id,i)=>syncV(id,['•••• \u00a0•••• \u00a0•••• \u00a0••••','— — —','MM/YY'][i]));
-  const vc=document.getElementById('tu-vc');if(vc)vc.className='vcard vc-d';
-  ['tu-vclogo','tu-clogo'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
-  syncV('tu-netname',t('enter_card'));
-  buildSel('tu-acc');loadDashboard();
-}
-
-/* ═══ PAYMENT ═══ */
-function loadPayment(){buildSel('py-acc');rebuildQuickBills();}
-function fillBill(d,m,a){document.getElementById('py-desc').value=d;document.getElementById('py-merchant').value=m;document.getElementById('py-amt').value=a;}
-function doPayment(){
-  const accId=document.getElementById('py-acc').value,merchant=document.getElementById('py-merchant').value.trim(),desc=document.getElementById('py-desc').value.trim(),amt=parseFloat(document.getElementById('py-amt').value),card=document.getElementById('py-card').value.replace(/\s/g,''),exp=document.getElementById('py-exp').value.trim(),cvv=document.getElementById('py-cvv').value.trim();
-  if(!accId)return showMsg('py-msg',t('err_select_acc'),'err');
-  if(!merchant)return showMsg('py-msg',t('err_merchant'),'err');
-  if(isNaN(amt)||amt<0.01)return showMsg('py-msg',t('err_valid_amount'),'err');
-  if(card.length<13)return showMsg('py-msg',t('err_valid_card'),'err');
-  if(!/^\d{2}\/\d{2}$/.test(exp))return showMsg('py-msg',t('err_valid_exp'),'err');
-  if(cvv.length<3)return showMsg('py-msg',t('err_valid_cvv'),'err');
-  const accs=DB.accounts,a=accs.find(x=>x.id===accId);if(!a)return showMsg('py-msg',t('err_not_found'),'err');
-  if(a.balance<amt)return showMsg('py-msg',t('err_insufficient')+fmt(a.balance),'err');
-  const net=detectNet(card),nl=NET[net]?.name||'Card';
-  a.balance-=amt;DB.setAccounts(accs);
-  appendLedger(accId,'DEBIT',amt,a.balance,(desc||merchant)+' — '+nl,CU.id);
-  addAudit(CU.id,'PAYMENT',fmt(amt)+' → '+merchant,'SUCCESS');
-  showMsg('py-msg',fmt(amt)+t('msg_payment_ok')+merchant+' ('+nl+')'+t('msg_payment_bal')+fmt(a.balance),'ok');
-  toast(fmt(amt)+t('toast_payment_ok'),'ok');loadDashboard();
-}
-
-/* ═══ TRANSFER ═══ */
-let TF_TYPE = 'FAST';
-
-const TF_TYPES = {
-  FAST:{
-    ico:'⚡',
-    label:{tr:'FAST',en:'FAST',ru:'FAST'},
-    timing:{tr:'7/24 Anlık',en:'7/24 Instant',ru:'7/24 Мгновенно'},
-    fee:{tr:'Ücretsiz',en:'Free',ru:'Бесплатно'},
-    desc:{tr:'Fonların Anlık ve Sürekli Transferi — Bankalar arası anlık para transferi',en:'Instant interbank transfer available 24/7, all year round',ru:'Мгновенный межбанковский перевод — круглосуточно, без выходных'},
-    toHint:{tr:'IBAN, Hesap No, Tel (+90) veya E-posta',en:'IBAN, Account No, Phone (+90) or Email',ru:'IBAN, номер счёта, телефон (+90) или e-mail'},
-    toLbl:{tr:'Alıcı (IBAN / Tel / E-posta)',en:'Recipient (IBAN / Phone / Email)',ru:'Получатель (IBAN / Тел / Email)'},
-    limit:100000,
-    limitTxt:{tr:'FAST işlem limiti ₺100.000 (TCMB yönetmeliği)',en:'FAST transaction limit ₺100,000 (CBRT regulation)',ru:'Лимит FAST: ₺100 000 (требование ЦБ Турции)'},
-    rules:{tr:['⚡ Anlık — genellikle 5 saniye içinde ulaşır','🕐 7/24 hizmet — resmi tatillerde de çalışır','💰 Maksimum ₺100.000 / işlem','📱 Tel veya e-posta ile Kolay Adres desteği','🏦 Tüm Türk bankaları desteklenir'],en:['⚡ Instant — typically arrives within 5 seconds','🕐 7/24 service — works on public holidays too','💰 Max ₺100,000 per transaction','📱 Kolay Adres: send via phone or email','🏦 Supported by all Turkish banks'],ru:['⚡ Мгновенно — обычно за 5 секунд','🕐 7/24 — работает в праздники','💰 Максимум ₺100 000 за транзакцию','📱 Поддержка Kolay Adres (тел/email)','🏦 Все турецкие банки']},
-    swift:false,badge:'b-b'
-  },
-  EFT:{
-    ico:'🏦',
-    label:{tr:'EFT',en:'EFT',ru:'EFT'},
-    timing:{tr:'Hafta içi 08:00–17:00',en:'Weekdays 08:00–17:00',ru:'Будни 08:00–17:00'},
-    fee:{tr:'İşlem başı ücret uygulanabilir',en:'Fee may apply per transaction',ru:'Возможна комиссия за операцию'},
-    desc:{tr:'Elektronik Fon Transferi — Bankalar arası büyük tutarlı transferler için',en:'Electronic Fund Transfer — for large interbank transfers during business hours',ru:'Электронный перевод средств — крупные межбанковские переводы в рабочее время'},
-    toHint:{tr:'Alıcı IBAN numarası (TR ile başlar)',en:'Recipient IBAN (starts with TR)',ru:'IBAN получателя (начинается с TR)'},
-    toLbl:{tr:'Alıcı IBAN',en:'Recipient IBAN',ru:'IBAN получателя'},
-    limit:null,
-    limitTxt:null,
-    rules:{tr:['🏦 Bankacılık saatleri: 08:00–17:00 (hafta içi)','💰 Tutar limiti yoktur','⏰ Saat 17:00 sonrası işlemler ertesi gün işlenir','📄 IBAN zorunludur','🔁 Her işlem için referans numarası üretilir'],en:['🏦 Processing hours: 08:00–17:00 (weekdays)','💰 No amount limit','⏰ After 17:00 → processed next business day','📄 IBAN is mandatory','🔁 Unique reference number per transaction'],ru:['🏦 Рабочие часы: 08:00–17:00 (будни)','💰 Ограничений по сумме нет','⏰ После 17:00 → обрабатывается на следующий день','📄 IBAN обязателен','🔁 Уникальный реф. номер для каждой операции']},
-    swift:false,badge:'b-a'
-  },
-  HAVALE:{
-    ico:'⇄',
-    label:{tr:'Havale',en:'HAVALE',ru:'HAVALE'},
-    timing:{tr:'Anlık (aynı banka)',en:'Instant (same bank)',ru:'Мгновенно (один банк)'},
-    fee:{tr:'Ücretsiz',en:'Free',ru:'Бесплатно'},
-    desc:{tr:'Havale — Aynı banka içi anlık para transferi',en:'Intrabank instant transfer — between accounts at the same bank',ru:'Внутрибанковский мгновенный перевод'},
-    toHint:{tr:'Alıcı hesap no veya IBAN',en:'Recipient account number or IBAN',ru:'Номер счёта или IBAN получателя'},
-    toLbl:{tr:'Alıcı Hesap / IBAN',en:'Recipient Account / IBAN',ru:'Счёт / IBAN получателя'},
-    limit:null,
-    limitTxt:null,
-    rules:{tr:['⚡ Anlık — banka içi işlem, anında tamamlanır','💰 Tutar limiti yoktur','🔒 Sadece aynı bankadaki hesaplara','🆓 Ücret alınmaz','📋 Referans numarası ile takip edilebilir'],en:['⚡ Instant — intrabank, completes immediately','💰 No amount limit','🔒 Only between accounts at the same bank','🆓 No fee charged','📋 Trackable via reference number'],ru:['⚡ Мгновенно — внутрибанковская операция','💰 Без ограничений по сумме','🔒 Только внутри одного банка','🆓 Без комиссии','📋 Отслеживается по реф. номеру']},
-    swift:false,badge:'b-g'
-  },
-  SWIFT:{
-    ico:'🌐',
-    label:{tr:'SWIFT',en:'SWIFT',ru:'SWIFT'},
-    timing:{tr:'1–5 iş günü',en:'1–5 business days',ru:'1–5 рабочих дней'},
-    fee:{tr:'Correspondent bank ücreti uygulanır',en:'Correspondent bank fee applies',ru:'Взимается комиссия банка-корреспондента'},
-    desc:{tr:'SWIFT — Uluslararası para transferi, BIC/SWIFT kodu ile',en:'International wire transfer via SWIFT network with BIC code and IBAN',ru:'Международный банковский перевод через сеть SWIFT с BIC-кодом'},
-    toHint:{tr:'Alıcı IBAN (uluslararası format)',en:'Recipient IBAN (international format)',ru:'IBAN получателя (международный формат)'},
-    toLbl:{tr:'Alıcı IBAN',en:'Recipient IBAN',ru:'IBAN получателя'},
-    limit:null,
-    limitTxt:null,
-    rules:{tr:['🌐 BIC/SWIFT kodu zorunludur (8 veya 11 karakter)','📅 İşlem süresi: 1–5 iş günü','💱 Yabancı para birimi seçilebilir','💰 Muhabir banka ücreti alıcıdan kesililebilir','📄 MT103 mesaj standardı — gerçek SWIFT transferi ile aynı yapı'],en:['🌐 BIC/SWIFT code is mandatory (8 or 11 chars)','📅 Processing: 1–5 business days','💱 Foreign currency supported','💰 Correspondent bank fee may be deducted from amount','📄 MT103 message structure — mirrors real SWIFT format'],ru:['🌐 BIC/SWIFT код обязателен (8 или 11 символов)','📅 Срок обработки: 1–5 рабочих дней','💱 Поддержка иностранных валют','💰 Комиссия может быть удержана из суммы','📄 Структура MT103 — зеркалит реальный SWIFT']},
-    swift:true,badge:'b-b'
-  }
-};
-
-function buildTfTypeGrid(){
-  const g=document.getElementById('tf-type-grid');if(!g)return;
-  g.innerHTML=Object.entries(TF_TYPES).map(([k,v])=>`
-    <div class="quick-btn ${k===TF_TYPE?'style="border-color:var(--blue2);background:var(--s3)"':''}" id="tft-${k}" onclick="selectTfType('${k}')" style="${k===TF_TYPE?'border-color:var(--blue2);background:var(--s3);':''}">
-      <div class="qi">${v.ico}</div>
-      <div class="ql" style="font-size:.78rem;font-weight:700">${v.label[LANG]||v.label.en}</div>
-      <div style="font-size:.6rem;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${v.timing[LANG]||v.timing.en}</div>
-    </div>`).join('');
-}
-
-function selectTfType(type){
-  TF_TYPE=type;
-  buildTfTypeGrid();
-  const v=TF_TYPES[type];
-  // Banner
-  document.getElementById('tf-banner-ico').textContent=v.ico;
-  document.getElementById('tf-banner-title').textContent=(v.label[LANG]||v.label.en)+' — '+(v.desc[LANG]||v.desc.en).split('—')[0].trim();
-  document.getElementById('tf-banner-desc').textContent=(v.desc[LANG]||v.desc.en);
-  document.getElementById('tf-banner-timing').textContent='⏱ '+(v.timing[LANG]||v.timing.en);
-  document.getElementById('tf-banner-fee').textContent='💳 '+(v.fee[LANG]||v.fee.en);
-  // Badge
-  const badge=document.getElementById('tf-type-badge');
-  badge.textContent=v.label[LANG]||v.label.en;
-  badge.className='bdg '+v.badge;
-  // To label + hint
-  const lbl=document.getElementById('tf-to-label');
-  if(lbl)lbl.textContent=v.toLbl[LANG]||v.toLbl.en;
-  const hint=document.getElementById('tf-to-hint');
-  if(hint)hint.textContent=v.toHint[LANG]||v.toHint.en;
-  // SWIFT extra fields
-  const sf=document.getElementById('tf-swift-fields');
-  if(sf)sf.style.display=v.swift?'block':'none';
-  // Rules card
-  const rb=document.getElementById('tf-rules-body');
-  const rt=document.getElementById('tf-rules-title');
-  if(rb&&rt){
-    const rules=v.rules[LANG]||v.rules.en;
-    rt.textContent=(LANG==='tr'?'Transfer Kuralları':LANG==='ru'?'Правила перевода':'Transfer Rules')+' — '+v.label.en;
-    rb.innerHTML=rules.map(r=>`<div style="padding:3px 0;border-bottom:1px solid var(--bd)">${r}</div>`).join('');
-  }
-  // Limit warning reset
-  const warn=document.getElementById('tf-limit-warn');
-  if(warn)warn.style.display='none';
-  // Clear to field
-  const toEl=document.getElementById('tf-to');
-  if(toEl){toEl.value='';toEl.placeholder=v.toHint[LANG]||v.toHint.en;}
-  document.getElementById('tf-to-ico').textContent='';
-}
-
-function validateTfTo(){
-  const v=document.getElementById('tf-to').value.trim();
-  const ico=document.getElementById('tf-to-ico');
-  if(!v){ico.textContent='';return;}
-  // Detect what kind of input
-  if(/^TR\d{24}$/i.test(v.replace(/\s/g,''))){ico.textContent='🏦';}
-  else if(/^FT\d{8}/.test(v)){ico.textContent='✅';}
-  else if(/^\+90/.test(v)||/^05\d{9}/.test(v)){ico.textContent='📱';}
-  else if(/@/.test(v)){ico.textContent='✉️';}
-  else{ico.textContent='';}
-}
-
-function updateTfInfo(){
-  const v=document.getElementById('tf-from')?.value,a=DB.accounts.find(x=>x.id===v),el=document.getElementById('tf-info');
-  if(!el)return;
-  if(a)el.innerHTML=`<span style="color:var(--text3)">${t('col_accounts').split('/')[0].trim()}</span>: <strong>${a.number}</strong><br><span style="color:var(--text3)">${t('acc_type')}</span>: <strong>${a.type}</strong><br><span style="color:var(--text3)">${t('balance')}</span>: <strong style="color:#34d399">${fmt(a.balance)}</strong><br><span style="color:var(--text3)">ID</span>: <span style="font-family:'Space Mono',monospace;font-size:.7rem">${a.id}</span>`;
-  else el.textContent=t('select_account');
-  // Check FAST limit
-  const amt=parseFloat(document.getElementById('tf-amt')?.value||0);
-  checkFastLimit(amt);
-}
-
-function checkFastLimit(amt){
-  const v=TF_TYPES[TF_TYPE];
-  const warn=document.getElementById('tf-limit-warn');
-  if(!warn)return;
-  if(v.limit&&amt>v.limit){
-    warn.style.display='block';
-    warn.textContent='⚠ '+(v.limitTxt[LANG]||v.limitTxt.en)+' ('+fmt(v.limit)+')';
-  } else warn.style.display='none';
-}
-
-function loadTransfer(){
-  buildSel('tf-from');
-  updateTfInfo();
-  selectTfType(TF_TYPE);
-}
-
-function doTransfer(){
-  const fromId=document.getElementById('tf-from').value;
-  const toRef=document.getElementById('tf-to').value.trim();
-  const amt=parseFloat(document.getElementById('tf-amt').value);
-  const desc=document.getElementById('tf-desc').value.trim();
-  const type=TF_TYPE;
-
-  if(!fromId)return showMsg('tf-msg',t('err_from_acc'),'err');
-  if(!toRef)return showMsg('tf-msg',t('err_to_acc'),'err');
-  if(isNaN(amt)||amt<0.01)return showMsg('tf-msg',t('err_valid_amount'),'err');
-
-  // FAST limit check
-  if(type==='FAST'&&amt>100000){
-    const lw=TF_TYPES.FAST.limitTxt[LANG]||TF_TYPES.FAST.limitTxt.en;
-    return showMsg('tf-msg','⚠ '+lw,'err');
-  }
-
-  // SWIFT BIC validation
-  if(type==='SWIFT'){
-    const bic=document.getElementById('tf-bic').value.trim();
-    if(!bic||bic.length<8)return showMsg('tf-msg','Enter a valid BIC/SWIFT code (8–11 characters)','err');
-    const benName=document.getElementById('tf-ben-name').value.trim();
-    if(!benName)return showMsg('tf-msg','Enter beneficiary name','err');
-  }
-
-  const accs=DB.accounts;
-  const fa=accs.find(x=>x.id===fromId);
-  if(!fa)return showMsg('tf-msg',t('err_not_found'),'err');
-  if(fa.balance<amt)return showMsg('tf-msg',t('err_insufficient')+fmt(fa.balance),'err');
-
-  // For internal transfers, find recipient account
-  const ta=accs.find(x=>x.id===toRef||x.number===toRef||x.number===toRef.replace(/\s/g,''));
-
-  const ref=(type==='SWIFT'?'SWIFT':type.slice(0,3))+uid().toUpperCase();
-  const typeLabel=TF_TYPES[type].label.en;
-
-  if(ta&&fa.id!==ta.id){
-    // Internal transfer — both accounts found
-    fa.balance-=amt;ta.balance+=amt;DB.setAccounts(accs);
-    appendLedger(fa.id,'DEBIT',amt,fa.balance,`[${typeLabel}] → ${ta.number}`+(desc?' | '+desc:''),CU.id,ref);
-    appendLedger(ta.id,'CREDIT',amt,ta.balance,`[${typeLabel}] ← ${fa.number}`+(desc?' | '+desc:''),CU.id,ref);
-    addAudit(CU.id,'TRANSFER_'+type,fmt(amt)+' '+fa.number+' → '+ta.number,'SUCCESS');
-    const timingNote=type==='SWIFT'?' (1–5 business days)':type==='EFT'?' (next business day if after 17:00)':'';
-    showMsg('tf-msg',t('msg_transfer_ok')+ref+timingNote,'ok');
-  } else if(type==='SWIFT'||type==='EFT'||!ta){
-    // External / outbound transfer — debit only
-    fa.balance-=amt;DB.setAccounts(accs);
-    const bic=type==='SWIFT'?document.getElementById('tf-bic').value.trim():'';
-    const cur=type==='SWIFT'?document.getElementById('tf-currency').value:'TRY';
-    appendLedger(fa.id,'DEBIT',amt,fa.balance,`[${typeLabel}] → ${toRef.slice(0,20)}${bic?' BIC:'+bic:''} ${cur!=='TRY'?'('+cur+')':''}`.trim()+(desc?' | '+desc:''),CU.id,ref);
-    addAudit(CU.id,'TRANSFER_'+type,fmt(amt)+' → '+toRef.slice(0,20)+(bic?' ('+bic+')':''),'SUCCESS');
-    const statusMsg=type==='SWIFT'?` Processing: 1–5 business days`:type==='EFT'?` Processing: next business day if sent after 17:00`:'';
-    showMsg('tf-msg',t('msg_transfer_ok')+ref+statusMsg,'ok');
-  } else {
-    return showMsg('tf-msg',t('err_same_acc'),'err');
-  }
-
-  toast(`[${typeLabel}] `+fmt(amt)+' '+t('toast_transfer_ok'),'ok');
-  document.getElementById('tf-to').value='';
-  document.getElementById('tf-amt').value='';
-  document.getElementById('tf-to-ico').textContent='';
-  if(type==='SWIFT'){['tf-bic','tf-ben-name','tf-ben-bank'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
-  loadTransfer();loadDashboard();
-}
-
-/* ═══ HISTORY ═══ */
-function renderHistory(){
-  const flt=document.getElementById('hist-flt')?.value||'all';
-  const ids=myAccs().map(a=>a.id);
-  let en=DB.ledger.filter(e=>ids.includes(e.accountId));
-  if(flt!=='all')en=en.filter(e=>e.type===flt);
-  en=en.slice().reverse();
-  const el=document.getElementById('hist-list');if(!el)return;
-  if(!en.length){el.innerHTML=`<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">${t('no_tx_found')}</div></div>`;return;}
-  el.innerHTML=en.map(e=>`<div class="tx-row"><div class="tx-ico ${e.type==='CREDIT'?'c':'d'}">${e.type==='CREDIT'?'⬇':'⬆'}</div><div class="tx-info"><div class="tx-desc">${e.desc}</div><div class="tx-meta">${e.accountId} · ${e.ref}</div></div><div style="text-align:right"><div class="tx-amt ${e.type==='CREDIT'?'amt-c':'amt-d'}">${e.type==='CREDIT'?'+':'-'}${fmt(e.amount)}</div><div class="tx-date">${fmtDate(e.createdAt)}</div></div></div>`).join('');
-}
-
-/* ═══ PROFILE ═══ */
-function loadProfile(){
-  if(!CU)return;
-  const init=CU.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  syncV('prof-ava',init);syncV('prof-name',CU.name);
-  syncV('prof-tc','TC: '+(CU.tcno||'—').replace(/(\d{3})(?=\d)/g,'$1 '));
-  syncV('prof-role',CU.role==='admin'?t('role_admin'):t('role_customer'));
-  document.getElementById('prof-info').innerHTML=
-    `<span style="color:var(--text3)">${t('prof_name')}</span>: <strong>${CU.name}</strong><br>`+
-    `<span style="color:var(--text3)">${t('prof_email')}</span>: <strong>${CU.email}</strong><br>`+
-    `<span style="color:var(--text3)">${t('prof_phone')}</span>: <strong>${CU.phone||'—'}</strong><br>`+
-    `<span style="color:var(--text3)">${t('prof_tc')}</span>: <strong>${(CU.tcno||'—').replace(/(\d{3})(?=\d)/g,'$1 ')}</strong><br>`+
-    `<span style="color:var(--text3)">${t('prof_id')}</span>: <strong class="mono">${CU.id}</strong><br>`+
-    `<span style="color:var(--text3)">${t('prof_registered')}</span>: <strong>${fmtDate(CU.createdAt)}</strong>`;
-}
-function changePassword(){
-  if(!CU)return;
-  const old=document.getElementById('cp-old').value,nw=document.getElementById('cp-new').value,nw2=document.getElementById('cp-new2').value;
-  if(CU.password!==old){showMsg('cp-msg',t('err_old_pw'),'err');return;}
-  const errs=validatePw(nw);if(errs.length){showMsg('cp-msg',t('err_pw_prefix')+errs.join(', '),'err');return;}
-  if(nw!==nw2){showMsg('cp-msg',t('err_pw_match'),'err');return;}
-  const users=DB.users,u=users.find(x=>x.id===CU.id);
-  if(u){u.password=nw;DB.setUsers(users);CU.password=nw;}
-  addAudit(CU.id,'CHANGE_PASSWORD','','SUCCESS');
-  showMsg('cp-msg',t('msg_pw_ok'),'ok');toast(t('toast_pw_ok'),'ok');
-  ['cp-old','cp-new','cp-new2'].forEach(id=>document.getElementById(id).value='');
-}
-
-/* ═══ ADMIN ═══ */
-function renderUsers(){
-  const el=document.getElementById('users-tb');if(!el)return;
-  el.innerHTML=DB.users.map(u=>{const ua=DB.accounts.filter(a=>a.userId===u.id);return`<tr><td>${u.name}</td><td>${u.email}</td><td class="mono">${(u.tcno||'—').replace(/(\d{3})(?=\d)/g,'$1 ')}</td><td>${u.phone||'—'}</td><td><span class="bdg ${u.role==='admin'?'b-b':'b-g'}">${u.role==='admin'?t('role_admin'):t('role_customer')}</span></td><td class="mono">${fmtDate(u.createdAt)}</td><td>${ua.length} — ${fmt(ua.reduce((s,a)=>s+a.balance,0))}</td></tr>`;}).join('');
-}
-function renderAudit(){
-  const el=document.getElementById('audit-tb');if(!el)return;
-  el.innerHTML=DB.audit.slice().reverse().map(a=>`<tr><td class="mono">${fmtDate(a.createdAt)}</td><td class="mono">${a.userId}</td><td><strong>${a.action}</strong></td><td style="font-size:.77rem;color:var(--text2)">${a.detail}</td><td><span class="bdg ${a.outcome==='SUCCESS'?'b-g':'b-r'}">${a.outcome}</span></td></tr>`).join('');
-}
-
-/* ═══ HELPERS ═══ */
-function showMsg(id,msg,type){const el=document.getElementById(id);if(!el)return;el.className='mb '+type;el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},6000);}
-function toast(msg,type='ok'){const icons={ok:'✓',err:'✕',info:'ℹ'};const el=document.createElement('div');el.className='toast toast-'+type;el.innerHTML='<span>'+icons[type]+'</span>'+msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),4000);}
-
-/* ═══ INIT ═══ */
-applyTranslations();
-</script>
-</body>
-</html>
-=======
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Fintech</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#04070e;--s1:#080d1a;--s2:#0b1322;--s3:#0f1a2e;--s4:#14223c;
-  --bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.11);--bd3:rgba(255,255,255,.18);
-  --blue:#2563eb;--blue2:#3b82f6;--blue3:#60a5fa;
-  --cyan:#0891b2;--cyan2:#06b6d4;
-  --green:#059669;--green2:#10b981;
-  --red:#dc2626;--red2:#ef4444;
-  --amber:#d97706;--amber2:#f59e0b;
-  --text:#e8eeff;--text2:#7a90b8;--text3:#3d5275;--text4:#1e3050;
-  --r:14px;--r2:10px;--r3:8px;
-  --sh:0 4px 30px rgba(0,0,0,.55);
-  --sh-blue:0 0 40px rgba(37,99,235,.2);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.5;}
-input,button,select{font-family:inherit;}
-::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:var(--s1);}
-::-webkit-scrollbar-thumb{background:var(--s4);border-radius:4px;}
-
-.screen{display:none!important;}.screen.show{display:flex!important;}
-.page{display:none;}.page.active{display:block;animation:fadeUp .25s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
-@keyframes popIn{from{transform:scale(.93);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes orbFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-28px) scale(1.05)}}
-
-/* AUTH */
-#screen-auth{min-height:100vh;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden;padding:24px;}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;}
-.orb1{width:500px;height:500px;background:rgba(37,99,235,.08);top:-180px;left:-180px;animation:orbFloat 9s ease-in-out infinite;}
-.orb2{width:380px;height:380px;background:rgba(8,145,178,.07);bottom:-100px;right:-100px;animation:orbFloat 7s ease-in-out infinite;animation-delay:-3s;}
-.orb3{width:280px;height:280px;background:rgba(5,150,105,.05);top:50%;left:50%;transform:translate(-50%,-50%);animation:orbFloat 11s ease-in-out infinite;animation-delay:-6s;}
-#screen-auth::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.011) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.011) 1px,transparent 1px);background-size:64px 64px;pointer-events:none;}
-
-/* LANG SWITCHER */
-.lang-bar{display:flex;gap:6px;margin-bottom:24px;position:relative;z-index:2;animation:fadeIn .5s ease .1s both;}
-.lang-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--bd2);background:var(--s1);color:var(--text2);font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.04em;display:flex;align-items:center;gap:5px;}
-.lang-btn:hover{border-color:var(--blue2);color:var(--blue3);}
-.lang-btn.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 2px 12px rgba(37,99,235,.4);}
-.lang-flag{font-size:.9rem;}
-
-/* TOPBAR LANG */
-.tb-lang{display:flex;gap:4px;align-items:center;}
-.tb-lb{padding:5px 10px;border-radius:16px;border:1px solid var(--bd2);background:transparent;color:var(--text2);font-size:.7rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.04em;}
-.tb-lb:hover{border-color:var(--blue2);color:var(--blue3);}
-.tb-lb.active{background:var(--blue);border-color:var(--blue);color:#fff;}
-
-.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;position:relative;z-index:1;animation:fadeIn .6s ease .1s both;}
-.auth-logo-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--blue),var(--cyan2));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-2px;box-shadow:0 8px 24px rgba(37,99,235,.4);}
-.auth-logo-name{font-size:2rem;font-weight:800;letter-spacing:-.03em;background:linear-gradient(90deg,#fff 30%,var(--blue3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.auth-card{background:var(--s1);border:1px solid var(--bd2);border-radius:var(--r);width:100%;max-width:480px;padding:36px 36px 32px;position:relative;z-index:1;box-shadow:var(--sh),var(--sh-blue);animation:popIn .4s ease .2s both;}
-.auth-card-title{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;}
-.auth-card-sub{color:var(--text2);font-size:.88rem;margin-bottom:24px;}
-.a-tabs{display:flex;background:var(--s2);border-radius:var(--r3);padding:4px;margin-bottom:24px;border:1px solid var(--bd);}
-.a-tab{flex:1;border:none;background:none;color:var(--text2);font-size:.82rem;font-weight:600;padding:9px;border-radius:6px;transition:all .2s;cursor:pointer;}
-.a-tab.on{background:var(--blue);color:#fff;box-shadow:0 2px 14px rgba(37,99,235,.4);}
-.af{margin-bottom:14px;}
-.af label{display:flex;align-items:center;justify-content:space-between;font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:6px;}
-.af-hint{font-size:.6rem;font-weight:400;letter-spacing:.02em;text-transform:none;color:var(--text3);}
-.af-wrap{position:relative;}
-.af-wrap input{width:100%;background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:12px 44px 12px 14px;color:var(--text);font-size:.91rem;outline:none;transition:border-color .2s,box-shadow .2s;}
-.af-wrap input::placeholder{color:var(--text3);}
-.af-wrap input:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,130,246,.13);}
-.af-wrap input.v-ok{border-color:var(--green2);box-shadow:0 0 0 3px rgba(16,185,129,.1);}
-.af-wrap input.v-err{border-color:var(--red2);box-shadow:0 0 0 3px rgba(239,68,68,.12);}
-.af-ico{position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:1rem;opacity:.45;}
-.af-ico.btn{pointer-events:all;cursor:pointer;opacity:.6;}.af-ico.btn:hover{opacity:1;}
-.af-err{font-size:.69rem;color:var(--red2);margin-top:5px;display:none;}
-.af-ok{font-size:.69rem;color:var(--green2);margin-top:5px;display:none;}
-.pw-str{margin-top:7px;}
-.pw-bars{display:flex;gap:3px;margin-bottom:3px;}
-.pw-bar{height:3px;flex:1;border-radius:2px;background:var(--s4);transition:background .3s;}
-.pw-bar.s1{background:var(--red2);}.pw-bar.s2{background:var(--amber2);}.pw-bar.s3{background:var(--cyan2);}.pw-bar.s4{background:var(--green2);}
-.pw-lbl{font-size:.62rem;color:var(--text3);}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.chk-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:14px;}
-.chk-row input[type=checkbox]{width:16px;height:16px;margin-top:2px;accent-color:var(--blue2);cursor:pointer;flex-shrink:0;}
-.chk-row label{font-size:.77rem;color:var(--text2);cursor:pointer;line-height:1.5;}
-.chk-row a{color:var(--blue3);}
-.btn-submit{width:100%;background:linear-gradient(135deg,var(--blue),#1d4ed8);border:none;border-radius:var(--r3);padding:14px;color:#fff;font-size:.92rem;font-weight:700;transition:all .2s;box-shadow:0 4px 20px rgba(37,99,235,.35);cursor:pointer;}
-.btn-submit:hover{filter:brightness(1.1);transform:translateY(-1px);}.btn-submit:active{transform:none;}
-.g-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:var(--r3);padding:11px 14px;color:#fca5a5;font-size:.8rem;margin-bottom:14px;display:none;align-items:center;gap:8px;}
-
-/* APP */
-#screen-app{flex-direction:column;min-height:100vh;}
-.topbar{height:62px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:200;}
-.tb-logo{display:flex;align-items:center;gap:10px;}
-.tb-logo .li{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan2));display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:.9rem;box-shadow:0 4px 12px rgba(37,99,235,.3);}
-.tb-logo .ln{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,#fff,var(--blue3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.tb-right{display:flex;align-items:center;gap:10px;}
-.tb-bell{width:36px;height:36px;border-radius:50%;background:var(--s2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:1rem;cursor:pointer;position:relative;}
-.tb-bell .dot{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--red2);border:2px solid var(--s1);}
-.user-btn{display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--bd);border-radius:40px;padding:5px 14px 5px 5px;cursor:pointer;transition:background .2s;}
-.user-btn:hover{background:var(--s3);}
-.u-ava{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan2));display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;}
-.u-name-tb{font-size:.8rem;font-weight:600;}.u-role-tb{font-size:.6rem;color:var(--blue3);font-family:'Space Mono',monospace;}
-.btn-out{background:transparent;border:1px solid var(--bd2);color:var(--text2);padding:7px 12px;border-radius:var(--r3);font-size:.78rem;font-weight:600;transition:all .2s;cursor:pointer;}
-.btn-out:hover{border-color:var(--red2);color:var(--red2);}
-.app-body{display:flex;flex:1;min-height:calc(100vh - 62px);}
-.sidebar{width:244px;background:var(--s1);border-right:1px solid var(--bd);padding:14px 0;flex-shrink:0;display:flex;flex-direction:column;}
-.sb-grp{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text4);padding:0 18px;margin:18px 0 5px;}
-.sb-it{display:flex;align-items:center;gap:11px;padding:10px 18px;font-size:.845rem;font-weight:500;color:var(--text2);border-left:2px solid transparent;transition:all .15s;border-radius:0 var(--r3) var(--r3) 0;margin-right:10px;cursor:pointer;user-select:none;}
-.sb-it:hover{color:var(--text);background:var(--s2);}
-.sb-it.on{color:var(--blue3);border-left-color:var(--blue2);background:rgba(59,130,246,.09);}
-.sb-ico{font-size:1.05rem;width:22px;text-align:center;flex-shrink:0;}
-.sb-bot{margin-top:auto;padding:14px 18px;border-top:1px solid var(--bd);}
-.sb-uc{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r3);padding:12px;}
-.sb-un{font-size:.82rem;font-weight:600;margin-bottom:2px;}.sb-uid{font-family:'Space Mono',monospace;font-size:.58rem;color:var(--text3);}
-.main{flex:1;padding:28px 32px;overflow-y:auto;}
-.ph{margin-bottom:24px;}.pt{font-size:1.6rem;font-weight:700;letter-spacing:-.02em;}.ps{color:var(--text2);font-size:.875rem;margin-top:3px;}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px;}
-.stat{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;transition:border-color .2s;}
-.stat:hover{border-color:var(--bd3);}
-.stat::after{content:'';position:absolute;top:0;right:0;width:70px;height:70px;background:radial-gradient(circle at top right,rgba(59,130,246,.1),transparent 70%);}
-.stat-ico{font-size:1.3rem;margin-bottom:10px;}.stat-lbl{font-family:'Space Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:5px;}.stat-val{font-size:1.6rem;font-weight:700;letter-spacing:-.02em;}
-.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:18px;}
-.card-hd{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.15);}
-.card-title{font-size:.78rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text2);}
-.card-body{padding:20px;}
-.btn{padding:9px 18px;border-radius:var(--r3);font-size:.82rem;font-weight:600;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
-.btn-p{background:var(--blue);color:#fff;box-shadow:0 2px 12px rgba(37,99,235,.3);}.btn-p:hover{filter:brightness(1.12);}
-.btn-g{background:var(--s2);border:1px solid var(--bd2);color:var(--text2);}.btn-g:hover{border-color:var(--blue2);color:var(--blue3);}
-.btn-sm{padding:6px 12px;font-size:.76rem;}
-.fld{margin-bottom:14px;display:flex;flex-direction:column;gap:5px;}
-.fld label{font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);}
-.fld input,.fld select,.fld textarea{background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;}
-.fld input:focus,.fld select:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
-.fld input::placeholder{color:var(--text3);}
-.fld select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%237a90b8' viewBox='0 0 20 20'%3E%3Cpath d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:16px;padding-right:34px;}
-.fm{display:flex;gap:10px;margin-top:6px;align-items:center;}
-.mb{padding:11px 14px;border-radius:var(--r3);font-size:.82rem;margin-top:12px;display:none;}
-.mb.ok{background:rgba(5,150,105,.1);border:1px solid rgba(16,185,129,.3);color:#6ee7b7;}
-.mb.err{background:rgba(220,38,38,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
-.tw{overflow-x:auto;}
-.tbl{width:100%;border-collapse:collapse;font-size:.81rem;}
-.tbl th{font-family:'Space Mono',monospace;font-size:.57rem;letter-spacing:.13em;text-transform:uppercase;color:var(--text3);padding:9px 14px;text-align:left;border-bottom:1px solid var(--bd);background:rgba(0,0,0,.12);white-space:nowrap;}
-.tbl td{padding:11px 14px;border-bottom:1px solid var(--bd);vertical-align:middle;}
-.tbl tr:last-child td{border-bottom:none;}.tbl tr:hover td{background:rgba(255,255,255,.017);}
-.mono{font-family:'Space Mono',monospace;font-size:.72rem;}
-.bdg{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-family:'Space Mono',monospace;font-size:.54rem;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
-.b-g{background:rgba(5,150,105,.12);color:#34d399;}.b-r{background:rgba(220,38,38,.1);color:#f87171;}.b-b{background:rgba(37,99,235,.12);color:var(--blue3);}.b-a{background:rgba(217,119,6,.12);color:#fbbf24;}
-.amt-c{color:#34d399;font-weight:700;}.amt-d{color:#f87171;font-weight:700;}
-.acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px;}
-.acc-card{border-radius:18px;padding:24px;min-height:148px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;}
-.acc-card:hover{transform:translateY(-3px);box-shadow:0 20px 50px rgba(0,0,0,.5);}
-.acc-card::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.04);}
-.acc-card::after{content:'';position:absolute;bottom:-20px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.03);}
-.ac-blue{background:linear-gradient(140deg,#1e3a8a,#2563eb 60%,#3b82f6);}
-.ac-teal{background:linear-gradient(140deg,#134e4a,#0f766e 60%,#0d9488);}
-.ac-violet{background:linear-gradient(140deg,#3b0764,#6d28d9 60%,#7c3aed);}
-.ac-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;}
-.ac-lbl{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;opacity:.55;margin-bottom:3px;}
-.ac-num{font-family:'Space Mono',monospace;font-size:.76rem;opacity:.7;}
-.ac-bal{font-size:1.75rem;font-weight:700;letter-spacing:-.02em;position:relative;z-index:1;}
-.ac-sub{font-family:'Space Mono',monospace;font-size:.58rem;opacity:.3;margin-top:6px;position:relative;z-index:1;}
-.pay-layout{display:grid;grid-template-columns:1fr 1.3fr;gap:20px;}
-.vcard{border-radius:20px;padding:24px 22px 20px;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;box-shadow:0 16px 50px rgba(0,0,0,.65);transition:all .4s ease;}
-.vcard::after{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.07) 0%,transparent 50%);}
-.vc-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.022) 0,rgba(255,255,255,.022) 1px,transparent 1px,transparent 32px),repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0,rgba(255,255,255,.022) 1px,transparent 1px,transparent 32px);}
-.vc-shine{position:absolute;top:-60%;left:-60%;width:220%;height:220%;background:conic-gradient(transparent 20%,rgba(255,255,255,.04) 40%,transparent 60%);animation:vcSpin 10s linear infinite;}
-@keyframes vcSpin{to{transform:rotate(360deg)}}
-.vc-d{background:linear-gradient(145deg,#0f172a,#1e3a8a 50%,#1d4ed8);}
-.vc-mc{background:linear-gradient(145deg,#0a0a0a,#1a1a2e 40%,#2d1b69);}
-.vc-vi{background:linear-gradient(145deg,#071952,#1a1f71 50%,#263399);}
-.vc-tr{background:linear-gradient(145deg,#002060,#003087 40%,#660000);}
-.vc-ax{background:linear-gradient(145deg,#003366,#006699 50%,#0099bb);}
-.vc-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1;}
-.vc-bank{font-size:.92rem;font-weight:800;}
-.vc-chip{width:36px;height:28px;border-radius:6px;background:linear-gradient(135deg,#c9922a,#f0d060,#a07020);box-shadow:inset 0 1px 3px rgba(255,255,255,.3);}
-.vc-num{font-family:'Space Mono',monospace;font-size:.95rem;letter-spacing:.2em;color:rgba(255,255,255,.88);position:relative;z-index:1;text-align:center;}
-.vc-bot{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1;}
-.vc-hlbl{font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;opacity:.45;margin-bottom:2px;}
-.vc-hnam{font-size:.76rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
-.vc-elbl{font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;opacity:.45;margin-bottom:2px;}
-.vc-eval{font-family:'Space Mono',monospace;font-size:.76rem;}
-.vc-logo{display:flex;align-items:center;}
-.visa-t{font-family:'Plus Jakarta Sans',sans-serif;font-style:italic;font-weight:900;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.3);}
-.troy-t{font-family:'Plus Jakarta Sans',sans-serif;font-weight:900;color:#fff;display:flex;align-items:center;}
-.troy-oy{color:#f59e0b;}.troy-dot{width:6px;height:6px;border-radius:50%;background:#f59e0b;margin-left:2px;margin-bottom:2px;}
-.amex-t{font-family:'Space Mono',monospace;font-weight:700;color:#fff;font-size:.65em;letter-spacing:.08em;}
-.net-pill{display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r3);padding:11px 14px;margin-top:12px;min-height:46px;transition:all .3s;}
-.np-ico{font-size:1.1rem;}.np-lbl{font-size:.6rem;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:2px;}.np-name{font-size:.87rem;font-weight:700;}.np-none{color:var(--text3);}
-.cin{position:relative;}
-.cin input{width:100%;background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 62px 11px 13px;color:var(--text);font-family:'Space Mono',monospace;font-size:.88rem;letter-spacing:.07em;outline:none;transition:border-color .2s,box-shadow .2s;}
-.cin input:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
-.cin input::placeholder{font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:0;color:var(--text3);}
-.cin-logo{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;display:flex;align-items:center;}
-.tx-row{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--bd);transition:background .15s;}
-.tx-row:last-child{border-bottom:none;}.tx-row:hover{background:rgba(255,255,255,.016);}
-.tx-ico{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
-.tx-ico.c{background:rgba(5,150,105,.15);}.tx-ico.d{background:rgba(220,38,38,.12);}
-.tx-info{flex:1;min-width:0;}.tx-desc{font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tx-meta{font-size:.7rem;color:var(--text2);margin-top:2px;font-family:'Space Mono',monospace;}
-.tx-amt{font-size:.92rem;font-weight:700;}.tx-date{font-size:.62rem;color:var(--text3);font-family:'Space Mono',monospace;text-align:right;margin-top:2px;}
-.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
-.quick-btn{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r2);padding:16px 10px;text-align:center;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:7px;}
-.quick-btn:hover{background:var(--s2);border-color:var(--blue2);transform:translateY(-2px);}
-.qi{font-size:1.4rem;}.ql{font-size:.72rem;font-weight:600;color:var(--text2);}
-.prof-hero{background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--bd);border-radius:var(--r);padding:28px;display:flex;align-items:center;gap:20px;margin-bottom:18px;}
-.prof-ava{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan2));display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;flex-shrink:0;box-shadow:0 8px 24px rgba(37,99,235,.4);}
-.prof-name{font-size:1.3rem;font-weight:700;letter-spacing:-.01em;}.prof-id{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text3);margin-top:4px;}
-#toasts{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
-.toast{display:flex;align-items:center;gap:10px;padding:13px 18px;border-radius:var(--r3);font-size:.83rem;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideIn .3s ease;max-width:340px;pointer-events:all;}
-.toast-ok{background:var(--s3);border-left:3px solid var(--green2);color:#6ee7b7;}
-.toast-err{background:var(--s3);border-left:3px solid var(--red2);color:#fca5a5;}
-.toast-info{background:var(--s3);border-left:3px solid var(--blue3);color:#93c5fd;}
-.empty{text-align:center;padding:48px 20px;}.empty-ico{font-size:2.8rem;margin-bottom:12px;opacity:.4;}.empty-txt{font-size:.84rem;color:var(--text3);}
-@media(max-width:768px){.sidebar{display:none;}.main{padding:16px;}.pay-layout,.g2{grid-template-columns:1fr;}.quick-grid{grid-template-columns:repeat(2,1fr);}}
-</style>
-</head>
-<body>
-
-<!-- AUTH SCREEN -->
-<div id="screen-auth" class="screen show">
-  <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
-
-  <!-- Language switcher on auth -->
-  <div class="lang-bar">
-    <button class="lang-btn" onclick="setLang('tr')"><span class="lang-flag">🇹🇷</span> Türkçe</button>
-    <button class="lang-btn" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span> English</button>
-    <button class="lang-btn" onclick="setLang('ru')"><span class="lang-flag">🇷🇺</span> Русский</button>
-  </div>
-
-  <div class="auth-logo">
-    <div class="auth-logo-icon">Ft</div>
-    <span class="auth-logo-name">Fintech</span>
-  </div>
-
-  <div class="auth-card">
-    <div class="auth-card-title" id="auth-title"></div>
-    <div class="auth-card-sub"   id="auth-sub"></div>
-    <div class="a-tabs">
-      <button class="a-tab on" onclick="switchTab('login')"  id="tab-login-btn"></button>
-      <button class="a-tab"    onclick="switchTab('register')" id="tab-reg-btn"></button>
-    </div>
-    <div id="g-err" class="g-err"><span>⚠</span><span id="g-err-msg"></span></div>
-
-    <!-- LOGIN -->
-    <div id="panel-login">
-      <div class="af">
-        <label id="lbl-email"></label>
-        <div class="af-wrap"><input type="email" id="l-email" autocomplete="email"><span class="af-ico">✉</span></div>
-      </div>
-      <div class="af">
-        <label id="lbl-password"></label>
-        <div class="af-wrap"><input type="password" id="l-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"><span class="af-ico btn" onclick="togglePw('l-pass',this)">👁</span></div>
-      </div>
-      <button class="btn-submit" onclick="doLogin()" id="btn-login-submit"></button>
-    </div>
-
-    <!-- REGISTER -->
-    <div id="panel-register" style="display:none">
-      <div class="g2">
-        <div class="af">
-          <label id="lbl-fullname"></label>
-          <div class="af-wrap"><input type="text" id="r-name" oninput="vName()"><span class="af-ico" id="ico-name"></span></div>
-          <div class="af-err" id="err-name"></div>
-        </div>
-        <div class="af">
-          <label id="lbl-phone"><span id="lbl-phone-hint" class="af-hint"></span></label>
-          <div class="af-wrap"><input type="tel" id="r-phone" oninput="vPhone()"><span class="af-ico" id="ico-phone"></span></div>
-          <div class="af-err" id="err-phone"></div>
-        </div>
-      </div>
-      <div class="af">
-        <label id="lbl-email2"></label>
-        <div class="af-wrap"><input type="email" id="r-email" oninput="vEmail()"><span class="af-ico" id="ico-email"></span></div>
-        <div class="af-err" id="err-email"></div>
-      </div>
-      <div class="af">
-        <label id="lbl-tcno"><span id="lbl-tcno-hint" class="af-hint"></span></label>
-        <div class="af-wrap"><input type="text" id="r-tcno" maxlength="14" oninput="vTC()" autocomplete="off"><span class="af-ico" id="ico-tc"></span></div>
-        <div class="af-err" id="err-tc"></div>
-        <div class="af-ok"  id="ok-tc"></div>
-      </div>
-      <div class="af">
-        <label id="lbl-pw"><span id="lbl-pw-hint" class="af-hint"></span></label>
-        <div class="af-wrap"><input type="password" id="r-pass" oninput="vPw()" autocomplete="new-password"><span class="af-ico btn" onclick="togglePw('r-pass',this)">👁</span></div>
-        <div class="pw-str">
-          <div class="pw-bars"><div class="pw-bar" id="pb1"></div><div class="pw-bar" id="pb2"></div><div class="pw-bar" id="pb3"></div><div class="pw-bar" id="pb4"></div></div>
-          <div class="pw-lbl" id="pw-lbl"></div>
-        </div>
-        <div class="af-err" id="err-pass"></div>
-      </div>
-      <div class="af">
-        <label id="lbl-pw2"></label>
-        <div class="af-wrap"><input type="password" id="r-pass2" oninput="vPw2()" autocomplete="new-password"><span class="af-ico" id="ico-pass2"></span></div>
-        <div class="af-err" id="err-pass2"></div>
-      </div>
-      <div class="chk-row">
-        <input type="checkbox" id="kvkk">
-        <label for="kvkk" id="lbl-kvkk"></label>
-      </div>
-      <button class="btn-submit" onclick="doRegister()" id="btn-reg-submit"></button>
-    </div>
-  </div>
-</div>
-
-<!-- APP SCREEN -->
-<div id="screen-app" class="screen">
-  <div class="topbar">
-    <div class="tb-logo">
-      <div class="li">Ft</div>
-      <span class="ln">Fintech</span>
-    </div>
-    <div class="tb-right">
-      <!-- Language switcher in topbar -->
-      <div class="tb-lang">
-        <button class="tb-lb" onclick="setLang('tr')">🇹🇷 TR</button>
-        <button class="tb-lb" onclick="setLang('en')">🇬🇧 EN</button>
-        <button class="tb-lb" onclick="setLang('ru')">🇷🇺 RU</button>
-      </div>
-      <div class="tb-bell"><span>🔔</span><div class="dot"></div></div>
-      <div class="user-btn" onclick="goPage('profile')">
-        <div class="u-ava" id="u-ava">?</div>
-        <div><div class="u-name-tb" id="u-name">—</div><div class="u-role-tb" id="u-role">—</div></div>
-      </div>
-      <button class="btn-out" onclick="doLogout()" id="btn-logout"></button>
-    </div>
-  </div>
-
-  <div class="app-body">
-    <nav class="sidebar">
-      <div class="sb-grp" id="sb-grp-general"></div>
-      <div class="sb-it on" onclick="goPage('dashboard')"><span class="sb-ico">◈</span> <span data-i18n="nav_dashboard"></span></div>
-      <div class="sb-grp" id="sb-grp-banking"></div>
-      <div class="sb-it" onclick="goPage('accounts')"><span class="sb-ico">💳</span> <span data-i18n="nav_accounts"></span></div>
-      <div class="sb-it" onclick="goPage('topup')"><span class="sb-ico">⬆</span> <span data-i18n="nav_topup"></span></div>
-      <div class="sb-it" onclick="goPage('payment')"><span class="sb-ico">💸</span> <span data-i18n="nav_payment"></span></div>
-      <div class="sb-it" onclick="goPage('transfer')"><span class="sb-ico">⇄</span> <span data-i18n="nav_transfer"></span></div>
-      <div class="sb-it" onclick="goPage('history')"><span class="sb-ico">📋</span> <span data-i18n="nav_history"></span></div>
-      <div id="admin-nav" style="display:none">
-        <div class="sb-grp" id="sb-grp-admin"></div>
-        <div class="sb-it" onclick="goPage('users')"><span class="sb-ico">👥</span> <span data-i18n="nav_users"></span></div>
-        <div class="sb-it" onclick="goPage('audit')"><span class="sb-ico">🔍</span> <span data-i18n="nav_audit"></span></div>
-      </div>
-      <div class="sb-grp" id="sb-grp-account"></div>
-      <div class="sb-it" onclick="goPage('profile')"><span class="sb-ico">👤</span> <span data-i18n="nav_profile"></span></div>
-      <div class="sb-bot">
-        <div class="sb-uc"><div class="sb-un" id="sb-name">—</div><div class="sb-uid" id="sb-id">—</div></div>
-      </div>
-    </nav>
-
-    <main class="main">
-
-      <!-- DASHBOARD -->
-      <div id="page-dashboard" class="page active">
-        <div class="ph"><div class="pt" data-i18n="page_dashboard"></div><div class="ps" data-i18n="page_dashboard_sub"></div></div>
-        <div class="stats-row" id="dash-stats"></div>
-        <div class="quick-grid">
-          <div class="quick-btn" onclick="goPage('topup')"><div class="qi">⬆</div><div class="ql" data-i18n="nav_topup"></div></div>
-          <div class="quick-btn" onclick="goPage('payment')"><div class="qi">💸</div><div class="ql" data-i18n="nav_payment"></div></div>
-          <div class="quick-btn" onclick="goPage('transfer')"><div class="qi">⇄</div><div class="ql" data-i18n="nav_transfer"></div></div>
-          <div class="quick-btn" onclick="goPage('history')"><div class="qi">📋</div><div class="ql" data-i18n="nav_history"></div></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px">
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="recent_tx"></span><button class="btn btn-g btn-sm" onclick="renderRecentTx()">↻</button></div>
-            <div id="dash-txs"></div>
-          </div>
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="nav_accounts"></span><button class="btn btn-g btn-sm" onclick="goPage('accounts')" data-i18n="btn_all"></button></div>
-            <div class="card-body"><div id="dash-accs" class="acc-grid" style="grid-template-columns:1fr"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ACCOUNTS -->
-      <div id="page-accounts" class="page">
-        <div class="ph"><div class="pt" data-i18n="page_accounts"></div><div class="ps" data-i18n="page_accounts_sub"></div></div>
-        <div id="accs-list" class="acc-grid" style="margin-bottom:22px"></div>
-        <div class="card">
-          <div class="card-hd"><span class="card-title" data-i18n="open_account"></span></div>
-          <div class="card-body">
-            <div class="g2">
-              <div class="fld"><label data-i18n="acc_type"></label>
-                <select id="acc-type">
-                  <option value="Vadesiz" data-i18n-opt="acc_demand"></option>
-                  <option value="Tasarruf" data-i18n-opt="acc_savings"></option>
-                  <option value="Doviz" data-i18n-opt="acc_fx"></option>
-                </select>
-              </div>
-              <div class="fld"><label data-i18n="acc_opening_bal"></label><input type="number" id="acc-bal" placeholder="0.00" min="0" step="0.01"></div>
-            </div>
-            <div class="fm"><button class="btn btn-p" onclick="createAccount()" data-i18n="open_account"></button></div>
-            <div class="mb" id="acc-msg"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TOP UP -->
-      <div id="page-topup" class="page">
-        <div class="ph"><div class="pt" data-i18n="page_topup"></div><div class="ps" data-i18n="page_topup_sub"></div></div>
-        <div class="pay-layout">
-          <div>
-            <div class="card">
-              <div class="card-hd"><span class="card-title" data-i18n="card_preview"></span></div>
-              <div class="card-body">
-                <div class="vcard vc-d" id="tu-vc">
-                  <div class="vc-grid"></div><div class="vc-shine"></div>
-                  <div class="vc-top"><div class="vc-bank">Fintech</div><div class="vc-chip"></div></div>
-                  <div class="vc-num" id="tu-vcn">•••• &nbsp;•••• &nbsp;•••• &nbsp;••••</div>
-                  <div class="vc-bot">
-                    <div><div class="vc-hlbl" data-i18n="cardholder"></div><div class="vc-hnam" id="tu-vcname">— — —</div></div>
-                    <div style="text-align:right"><div class="vc-elbl" data-i18n="expiry_short"></div><div class="vc-eval" id="tu-vcexp">MM/YY</div></div>
-                    <div class="vc-logo" id="tu-vclogo"></div>
-                  </div>
-                </div>
-                <div class="net-pill"><div class="np-ico">💳</div><div><div class="np-lbl" data-i18n="card_network"></div><div class="np-name np-none" id="tu-netname" data-i18n="enter_card"></div></div></div>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="topup_details"></span></div>
-            <div class="card-body">
-              <div class="fld"><label data-i18n="target_account"></label><select id="tu-acc"></select></div>
-              <div class="fld"><label data-i18n="card_number"></label>
-                <div class="cin"><input type="text" id="tu-card" maxlength="19" oninput="onCard(this,'tu')" autocomplete="cc-number"><div class="cin-logo" id="tu-clogo"></div></div>
-              </div>
-              <div class="g2">
-                <div class="fld"><label data-i18n="cardholder"></label><input type="text" id="tu-cname" oninput="syncV('tu-vcname',this.value.toUpperCase()||'— — —')"></div>
-                <div class="fld"><label data-i18n="expiry"></label><input type="text" id="tu-exp" maxlength="5" oninput="fmtExp(this);syncV('tu-vcexp',this.value||'MM/YY')"></div>
-              </div>
-              <div class="g2">
-                <div class="fld"><label>CVV</label><input type="password" id="tu-cvv" maxlength="4"></div>
-                <div class="fld"><label data-i18n="amount"></label><input type="number" id="tu-amt" min="1" step="0.01"></div>
-              </div>
-              <div class="fm"><button class="btn btn-p" onclick="doTopUp()" data-i18n="btn_topup"></button></div>
-              <div class="mb" id="tu-msg"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAYMENT -->
-      <div id="page-payment" class="page">
-        <div class="ph"><div class="pt" data-i18n="page_payment"></div><div class="ps" data-i18n="page_payment_sub"></div></div>
-        <div class="pay-layout">
-          <div>
-            <div class="card">
-              <div class="card-hd"><span class="card-title" data-i18n="card_preview"></span></div>
-              <div class="card-body">
-                <div class="vcard vc-d" id="py-vc">
-                  <div class="vc-grid"></div><div class="vc-shine"></div>
-                  <div class="vc-top"><div class="vc-bank">Fintech</div><div class="vc-chip"></div></div>
-                  <div class="vc-num" id="py-vcn">•••• &nbsp;•••• &nbsp;•••• &nbsp;••••</div>
-                  <div class="vc-bot">
-                    <div><div class="vc-hlbl" data-i18n="cardholder"></div><div class="vc-hnam" id="py-vcname">— — —</div></div>
-                    <div style="text-align:right"><div class="vc-elbl" data-i18n="expiry_short"></div><div class="vc-eval" id="py-vcexp">MM/YY</div></div>
-                    <div class="vc-logo" id="py-vclogo"></div>
-                  </div>
-                </div>
-                <div class="net-pill"><div class="np-ico">💳</div><div><div class="np-lbl" data-i18n="card_network"></div><div class="np-name np-none" id="py-netname" data-i18n="enter_card"></div></div></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-hd"><span class="card-title" data-i18n="quick_pay"></span></div>
-              <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="quick-bills"></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="payment_details"></span></div>
-            <div class="card-body">
-              <div class="fld"><label data-i18n="from_account"></label><select id="py-acc"></select></div>
-              <div class="g2">
-                <div class="fld"><label data-i18n="merchant"></label><input type="text" id="py-merchant"></div>
-                <div class="fld"><label data-i18n="amount"></label><input type="number" id="py-amt" min="0.01" step="0.01"></div>
-              </div>
-              <div class="fld"><label data-i18n="description"></label><input type="text" id="py-desc"></div>
-              <div class="fld"><label data-i18n="card_number"></label>
-                <div class="cin"><input type="text" id="py-card" maxlength="19" oninput="onCard(this,'py')" autocomplete="cc-number"><div class="cin-logo" id="py-clogo"></div></div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-                <div class="fld"><label data-i18n="cardholder"></label><input type="text" id="py-cname" oninput="syncV('py-vcname',this.value.toUpperCase()||'— — —')"></div>
-                <div class="fld"><label data-i18n="expiry_short"></label><input type="text" id="py-exp" maxlength="5" oninput="fmtExp(this);syncV('py-vcexp',this.value||'MM/YY')"></div>
-                <div class="fld"><label>CVV</label><input type="password" id="py-cvv" maxlength="4"></div>
-              </div>
-              <div class="fm"><button class="btn btn-p" onclick="doPayment()" data-i18n="btn_pay"></button></div>
-              <div class="mb" id="py-msg"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- TRANSFER -->
-      <div id="page-transfer" class="page">
-        <div class="ph"><div class="pt" data-i18n="page_transfer"></div><div class="ps" data-i18n="page_transfer_sub"></div></div>
-
-        <!-- Transfer type selector -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px" id="tf-type-grid"></div>
-
-        <!-- Transfer info banner -->
-        <div id="tf-banner" style="background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r2);padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px;font-size:.8rem;transition:all .3s">
-          <span id="tf-banner-ico" style="font-size:1.3rem">⇄</span>
-          <div><div id="tf-banner-title" style="font-weight:700;margin-bottom:2px"></div><div id="tf-banner-desc" style="color:var(--text2);font-size:.75rem"></div></div>
-          <div style="margin-left:auto;text-align:right"><div id="tf-banner-timing" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--blue3)"></div><div id="tf-banner-fee" style="font-family:'Space Mono',monospace;font-size:.65rem;color:var(--text3);margin-top:2px"></div></div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:18px">
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="new_transfer"></span><span id="tf-type-badge" class="bdg b-b" style="font-size:.58rem">FAST</span></div>
-            <div class="card-body">
-              <div class="fld"><label data-i18n="from_account"></label><select id="tf-from" onchange="updateTfInfo()"></select></div>
-
-              <!-- Recipient field — changes label based on type -->
-              <div class="fld">
-                <label id="tf-to-label" data-i18n="to_account"></label>
-                <div style="position:relative">
-                  <input type="text" id="tf-to" style="width:100%;background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;transition:border-color .2s,box-shadow .2s" oninput="validateTfTo()">
-                  <span id="tf-to-ico" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:.9rem"></span>
-                </div>
-                <div id="tf-to-hint" style="font-size:.67rem;color:var(--text3);margin-top:4px"></div>
-              </div>
-
-              <!-- SWIFT-only fields -->
-              <div id="tf-swift-fields" style="display:none">
-                <div class="g2">
-                  <div class="fld"><label id="lbl-bic">BIC / SWIFT Code</label><input type="text" id="tf-bic" maxlength="11" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%;font-family:'Space Mono',monospace;letter-spacing:.05em" placeholder="e.g. AKBKTRIS"></div>
-                  <div class="fld"><label id="lbl-currency">Currency</label>
-                    <select id="tf-currency" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 28px 11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%237a90b8' viewBox='0 0 20 20'%3E%3Cpath d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:16px">
-                      <option value="USD">🇺🇸 USD — US Dollar</option>
-                      <option value="EUR">🇪🇺 EUR — Euro</option>
-                      <option value="GBP">🇬🇧 GBP — British Pound</option>
-                      <option value="CHF">🇨🇭 CHF — Swiss Franc</option>
-                      <option value="JPY">🇯🇵 JPY — Japanese Yen</option>
-                      <option value="CAD">🇨🇦 CAD — Canadian Dollar</option>
-                      <option value="AED">🇦🇪 AED — UAE Dirham</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="fld"><label id="lbl-beneficiary-name">Beneficiary Name</label><input type="text" id="tf-ben-name" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%"></div>
-                <div class="fld"><label id="lbl-beneficiary-bank">Beneficiary Bank Name</label><input type="text" id="tf-ben-bank" style="background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);padding:11px 13px;color:var(--text);font-size:.88rem;outline:none;width:100%"></div>
-              </div>
-
-              <div class="g2">
-                <div class="fld"><label data-i18n="amount"></label><input type="number" id="tf-amt" min="0.01" step="0.01" oninput="checkFastLimit(parseFloat(this.value)||0)"></div>
-                <div class="fld"><label data-i18n="description"></label><input type="text" id="tf-desc"></div>
-              </div>
-
-              <!-- FAST limit warning -->
-              <div id="tf-limit-warn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:var(--r3);padding:9px 13px;font-size:.76rem;color:#fbbf24;margin-bottom:10px"></div>
-
-              <div class="fm"><button class="btn btn-p" onclick="doTransfer()" id="tf-submit-btn" data-i18n="btn_send"></button></div>
-              <div class="mb" id="tf-msg"></div>
-            </div>
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:14px">
-            <div class="card">
-              <div class="card-hd"><span class="card-title" data-i18n="sender_info"></span></div>
-              <div class="card-body"><div id="tf-info" style="font-size:.83rem;color:var(--text2);line-height:2.1" data-i18n="select_account"></div></div>
-            </div>
-            <div class="card" id="tf-rules-card">
-              <div class="card-hd"><span class="card-title" id="tf-rules-title">Transfer Rules</span></div>
-              <div class="card-body" id="tf-rules-body" style="font-size:.78rem;color:var(--text2);line-height:2"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- HISTORY -->
-      <div id="page-history" class="page">
-        <div class="ph"><div class="pt" data-i18n="page_history"></div><div class="ps" data-i18n="page_history_sub"></div></div>
-        <div class="card">
-          <div class="card-hd">
-            <span class="card-title" data-i18n="all_tx"></span>
-            <div style="display:flex;gap:8px">
-              <select id="hist-flt" style="background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r3);padding:6px 28px 6px 10px;color:var(--text);font-size:.78rem;outline:none" onchange="renderHistory()" id="hist-sel">
-                <option value="all" data-i18n-opt="filter_all"></option>
-                <option value="CREDIT" data-i18n-opt="filter_credit"></option>
-                <option value="DEBIT" data-i18n-opt="filter_debit"></option>
-              </select>
-              <button class="btn btn-g btn-sm" onclick="renderHistory()">↻</button>
-            </div>
-          </div>
-          <div id="hist-list"></div>
-        </div>
-      </div>
-
-      <!-- PROFILE -->
-      <div id="page-profile" class="page">
-        <div class="ph"><div class="pt" data-i18n="page_profile"></div><div class="ps" data-i18n="page_profile_sub"></div></div>
-        <div class="prof-hero">
-          <div class="prof-ava" id="prof-ava">?</div>
-          <div>
-            <div class="prof-name" id="prof-name">—</div>
-            <div class="prof-id" id="prof-tc">TC: —</div>
-            <div style="margin-top:8px;display:flex;gap:8px"><span class="bdg b-g" id="prof-role">—</span><span class="bdg b-b" data-i18n="kyc_verified"></span></div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="personal_info"></span></div>
-            <div class="card-body" id="prof-info" style="font-size:.84rem;line-height:2.1;color:var(--text2)"></div>
-          </div>
-          <div class="card">
-            <div class="card-hd"><span class="card-title" data-i18n="change_password"></span></div>
-            <div class="card-body">
-              <div class="fld"><label data-i18n="current_password"></label><input type="password" id="cp-old"></div>
-              <div class="fld"><label data-i18n="new_password"></label><input type="password" id="cp-new"></div>
-              <div class="fld"><label data-i18n="confirm_password"></label><input type="password" id="cp-new2"></div>
-              <div class="fm"><button class="btn btn-p" onclick="changePassword()" data-i18n="btn_update"></button></div>
-              <div class="mb" id="cp-msg"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- USERS (admin) -->
-      <div id="page-users" class="page">
-        <div class="ph"><div class="pt" data-i18n="page_users"></div><div class="ps" data-i18n="page_users_sub"></div></div>
-        <div class="card">
-          <div class="card-hd"><span class="card-title" data-i18n="user_list"></span><button class="btn btn-g btn-sm" onclick="renderUsers()">↻</button></div>
-          <div class="tw"><table class="tbl">
-            <thead><tr>
-              <th data-i18n="col_name"></th><th data-i18n="col_email"></th>
-              <th data-i18n="col_tc"></th><th data-i18n="col_phone"></th>
-              <th data-i18n="col_role"></th><th data-i18n="col_registered"></th>
-              <th data-i18n="col_accounts"></th>
-            </tr></thead>
-            <tbody id="users-tb"></tbody>
-          </table></div>
-        </div>
-      </div>
-
-      <!-- AUDIT (admin) -->
-      <div id="page-audit" class="page">
-        <div class="ph"><div class="pt" data-i18n="page_audit"></div><div class="ps" data-i18n="page_audit_sub"></div></div>
-        <div class="card">
-          <div class="card-hd"><span class="card-title" data-i18n="audit_trail"></span><button class="btn btn-g btn-sm" onclick="renderAudit()">↻</button></div>
-          <div class="tw"><table class="tbl">
-            <thead><tr>
-              <th data-i18n="col_time"></th><th data-i18n="col_user"></th>
-              <th data-i18n="col_action"></th><th data-i18n="col_detail"></th>
-              <th data-i18n="col_result"></th>
-            </tr></thead>
-            <tbody id="audit-tb"></tbody>
-          </table></div>
-        </div>
-      </div>
-
-    </main>
-  </div>
-</div>
-<div id="toasts"></div>
-
-<script>
-'use strict';
-
-/* ═══════════════════════════════════
-   TRANSLATIONS
-═══════════════════════════════════ */
-const T = {
-  tr: {
-    /* auth */
-    welcome_back:'Tekrar Hoş Geldiniz', sign_in_to:'Hesabınıza giriş yapın',
-    create_account:'Hesap Oluştur', create_account_sub:'Yeni hesabınızı oluşturun',
-    tab_login:'Giriş Yap', tab_register:'Kayıt Ol',
-    lbl_email:'E-posta', lbl_password:'Şifre',
-    lbl_fullname:'Ad Soyad', lbl_phone:'Telefon', lbl_phone_hint:'+90 ile başlayın',
-    lbl_email2:'E-posta',
-    lbl_tcno:'TC Kimlik No', lbl_tcno_hint:'11 haneli Türk kimlik numarası',
-    lbl_pw:'Şifre', lbl_pw_hint:'Min 6 · 1 büyük harf · 1 rakam',
-    lbl_pw2:'Şifre Tekrar',
-    lbl_kvkk:'KVKK kapsamında <a href="#">Kişisel Verilerin Korunması</a> ve <a href="#">Kullanım Şartları</a>\'nı okudum, kabul ediyorum.',
-    btn_login:'Giriş Yap →', btn_register:'Hesap Oluştur →',
-    pw_default:'Şifre gücü gösterilecek',
-    pw_s1:'Çok Zayıf 🔴', pw_s2:'Zayıf 🟡', pw_s3:'İyi 🟢', pw_s4:'Güçlü 💪', pw_s5:'Çok Güçlü 🔐',
-    /* validation */
-    err_email:'Geçerli e-posta giriniz',
-    err_name:'Ad soyad sadece harf içerebilir (min 2)',
-    err_phone:'Geçerli Türk telefonu: +90 5XX XXX XX XX',
-    err_tc_len:'TC Kimlik No 11 haneli olmalıdır',
-    err_tc_inv:'TC Kimlik No doğrulaması başarısız',
-    ok_tc:'✓ Geçerli TC Kimlik No',
-    err_pw_len:'En az 6 karakter', err_pw_upper:'1 büyük harf', err_pw_num:'1 rakam',
-    err_pw_prefix:'Eksik: ',
-    err_pw2:'Şifreler eşleşmiyor',
-    err_email_taken:'Bu e-posta zaten kayıtlı',
-    err_tc_taken:'Bu TC Kimlik No zaten kayıtlı',
-    err_invalid_creds:'E-posta veya şifre hatalı',
-    err_fill_all:'Tüm alanları doldurunuz',
-    err_kvkk:'KVKK ve kullanım şartlarını kabul ediniz',
-    /* nav */
-    nav_dashboard:'Dashboard', nav_accounts:'Hesaplarım', nav_topup:'Para Yükle',
-    nav_payment:'Ödeme Yap', nav_transfer:'Transfer', nav_history:'İşlem Geçmişi',
-    nav_users:'Kullanıcılar', nav_audit:'Denetim Kaydı', nav_profile:'Profil',
-    sb_grp_general:'Genel', sb_grp_banking:'Bankacılık', sb_grp_admin:'Admin', sb_grp_account:'Hesabım',
-    btn_logout:'Çıkış',
-    /* pages */
-    page_dashboard:'Dashboard', page_dashboard_sub:'Finansal durumunuza genel bakış',
-    page_accounts:'Hesaplarım', page_accounts_sub:'Banka hesaplarınızı yönetin',
-    page_topup:'Para Yükle', page_topup_sub:'Kartınız ile hesabınıza para yükleyin',
-    page_payment:'Ödeme Yap', page_payment_sub:'Fatura ve işyeri ödemeleri',
-    page_transfer:'Para Transferi', page_transfer_sub:'Hesaplar arası anlık transfer',
-    page_history:'İşlem Geçmişi', page_history_sub:'Tüm işlemlerinizin kayıtları',
-    page_profile:'Profilim', page_profile_sub:'Hesap ve kişisel bilgileriniz',
-    page_users:'Kullanıcılar', page_users_sub:'Tüm kayıtlı kullanıcılar',
-    page_audit:'Denetim Kaydı', page_audit_sub:'Tüm işlem logları',
-    /* dashboard */
-    stat_total_balance:'Toplam Bakiye', stat_total_in:'Toplam Yükleme',
-    stat_total_out:'Toplam Harcama', stat_accounts:'Hesap Sayısı',
-    recent_tx:'Son İşlemler', btn_all:'Tümü →',
-    /* accounts */
-    open_account:'Yeni Hesap Aç', acc_type:'Hesap Türü',
-    acc_demand:'Vadesiz Hesap', acc_savings:'Tasarruf Hesabı', acc_fx:'Döviz Hesabı',
-    acc_opening_bal:'Açılış Bakiyesi',
-    /* card */
-    card_preview:'Kart Önizleme', cardholder:'Kart Sahibi',
-    expiry:'Son Kullanma', expiry_short:'Son Kul.',
-    card_network:'Kart Ağı', enter_card:'Kart numarası giriniz…',
-    card_number:'Kart Numarası',
-    /* topup */
-    topup_details:'Yükleme Detayları', target_account:'Yüklenecek Hesap',
-    btn_topup:'⬆ Para Yükle',
-    /* payment */
-    quick_pay:'Hızlı Fatura Öde', payment_details:'Ödeme Detayları',
-    from_account:'Ödenecek Hesap', merchant:'Kurum / Alıcı',
-    amount:'Tutar (₺)', description:'Açıklama',
-    btn_pay:'💸 Ödeme Yap',
-    bills:[['⚡','Elektrik','TEDAŞ','185.50'],['🔥','Doğalgaz','IGDAŞ','240.00'],['🌐','İnternet','Turkcell','99.90'],['📱','Telefon','Türk Telekom','79.90'],['💧','Su','İSKİ','65.00'],['📺','Netflix','Netflix','54.99']],
-    /* transfer */
-    new_transfer:'Yeni Transfer', to_account:'Alıcı Hesap No / ID',
-    btn_send:'⇄ Gönder', sender_info:'Gönderen Hesap Bilgisi', select_account:'Hesap seçiniz.',
-    /* history */
-    all_tx:'Tüm İşlemler', filter_all:'Tüm İşlemler',
-    filter_credit:'Yüklemeler', filter_debit:'Ödemeler / Çekimler',
-    /* profile */
-    personal_info:'Kişisel Bilgiler', change_password:'Şifre Değiştir',
-    current_password:'Mevcut Şifre', new_password:'Yeni Şifre', confirm_password:'Yeni Şifre Tekrar',
-    btn_update:'Güncelle', kyc_verified:'KYC Doğrulandı ✓',
-    prof_name:'Ad Soyad', prof_email:'E-posta', prof_phone:'Telefon',
-    prof_tc:'TC Kimlik', prof_id:'Kullanıcı ID', prof_registered:'Kayıt Tarihi',
-    role_admin:'Admin', role_customer:'Müşteri',
-    /* admin */
-    user_list:'Kullanıcı Listesi', audit_trail:'Audit Trail',
-    col_name:'Ad Soyad', col_email:'E-posta', col_tc:'TC Kimlik',
-    col_phone:'Telefon', col_role:'Rol', col_registered:'Kayıt',
-    col_accounts:'Hesap / Bakiye', col_time:'Zaman', col_user:'Kullanıcı',
-    col_action:'İşlem', col_detail:'Detay', col_result:'Sonuç',
-    /* misc */
-    no_accounts:'Henüz hesap yok', no_tx:'Henüz işlem yok', no_tx_found:'İşlem bulunamadı',
-    balance:'Bakiye', account:'Hesap',
-    err_insufficient:'Yetersiz bakiye. Mevcut: ', err_not_found:'Hesap bulunamadı',
-    err_same_acc:'Gönderen ve alıcı hesap aynı olamaz',
-    err_valid_amount:'Geçerli tutar giriniz',
-    err_valid_card:'Geçerli kart numarası giriniz',
-    err_valid_name:'Kart sahibi adı giriniz',
-    err_valid_exp:'Son kullanma AA/YY formatında olmalı',
-    err_valid_cvv:'CVV en az 3 karakter',
-    err_select_acc:'Lütfen bir hesap seçin',
-    err_min_amount:'Geçerli tutar (min ₺1)',
-    err_merchant:'Kurum/alıcı adı giriniz',
-    err_from_acc:'Gönderen hesap seçiniz',
-    err_to_acc:'Alıcı hesap giriniz',
-    toast_welcome:'Hoş geldiniz, ',
-    toast_registered:'Hesabınız oluşturuldu! 🎉',
-    toast_account_opened:'Hesap açıldı: ',
-    toast_topup_ok:' yüklendi ✓',
-    toast_payment_ok:' ödendi ✓',
-    toast_transfer_ok:'Transfer tamamlandı ✓',
-    toast_pw_ok:'Şifre güncellendi ✓',
-    msg_topup_ok:'✓ yüklendi. Yeni bakiye: ',
-    msg_topup_via:' via ',
-    msg_payment_ok:'✓ ödendi — ',
-    msg_payment_bal:'. Kalan: ',
-    msg_transfer_ok:'✓ gönderildi. Ref: ',
-    msg_acc_opened:'✓ Hesap açıldı: ',
-    msg_pw_ok:'✓ Şifreniz güncellendi',
-    err_old_pw:'Mevcut şifre hatalı',
-    err_pw_match:'Yeni şifreler eşleşmiyor',
-    currency:'₺',
-  },
-  en: {
-    welcome_back:'Welcome Back', sign_in_to:'Sign in to your account',
-    create_account:'Create Account', create_account_sub:'Create your new account',
-    tab_login:'Sign In', tab_register:'Register',
-    lbl_email:'Email', lbl_password:'Password',
-    lbl_fullname:'Full Name', lbl_phone:'Phone', lbl_phone_hint:'Start with +90',
-    lbl_email2:'Email',
-    lbl_tcno:'TC Identity No', lbl_tcno_hint:'11-digit Turkish national ID',
-    lbl_pw:'Password', lbl_pw_hint:'Min 6 · 1 uppercase · 1 number',
-    lbl_pw2:'Confirm Password',
-    lbl_kvkk:'I have read and accept the <a href="#">Privacy Policy</a> and <a href="#">Terms of Service</a>.',
-    btn_login:'Sign In →', btn_register:'Create Account →',
-    pw_default:'Password strength will appear here',
-    pw_s1:'Very Weak 🔴', pw_s2:'Weak 🟡', pw_s3:'Good 🟢', pw_s4:'Strong 💪', pw_s5:'Very Strong 🔐',
-    err_email:'Enter a valid email address',
-    err_name:'Full name must contain only letters (min 2)',
-    err_phone:'Valid Turkish phone: +90 5XX XXX XX XX',
-    err_tc_len:'TC Identity No must be 11 digits',
-    err_tc_inv:'TC Identity No validation failed',
-    ok_tc:'✓ Valid TC Identity No',
-    err_pw_len:'At least 6 characters', err_pw_upper:'1 uppercase letter', err_pw_num:'1 number',
-    err_pw_prefix:'Missing: ',
-    err_pw2:'Passwords do not match',
-    err_email_taken:'This email is already registered',
-    err_tc_taken:'This TC Identity No is already registered',
-    err_invalid_creds:'Incorrect email or password',
-    err_fill_all:'Please fill in all fields',
-    err_kvkk:'You must accept the terms and conditions',
-    nav_dashboard:'Dashboard', nav_accounts:'My Accounts', nav_topup:'Top Up',
-    nav_payment:'Make Payment', nav_transfer:'Transfer', nav_history:'Transaction History',
-    nav_users:'Users', nav_audit:'Audit Log', nav_profile:'Profile',
-    sb_grp_general:'General', sb_grp_banking:'Banking', sb_grp_admin:'Admin', sb_grp_account:'My Account',
-    btn_logout:'Sign Out',
-    page_dashboard:'Dashboard', page_dashboard_sub:'Your financial overview',
-    page_accounts:'My Accounts', page_accounts_sub:'Manage your bank accounts',
-    page_topup:'Top Up', page_topup_sub:'Add funds to your account via card',
-    page_payment:'Make a Payment', page_payment_sub:'Pay bills and merchants',
-    page_transfer:'Money Transfer', page_transfer_sub:'Instant transfer between accounts',
-    page_history:'Transaction History', page_history_sub:'Record of all your transactions',
-    page_profile:'My Profile', page_profile_sub:'Your personal & account information',
-    page_users:'Users', page_users_sub:'All registered users',
-    page_audit:'Audit Log', page_audit_sub:'All transaction logs',
-    stat_total_balance:'Total Balance', stat_total_in:'Total Loaded',
-    stat_total_out:'Total Spent', stat_accounts:'Accounts',
-    recent_tx:'Recent Transactions', btn_all:'All →',
-    open_account:'Open New Account', acc_type:'Account Type',
-    acc_demand:'Demand Account', acc_savings:'Savings Account', acc_fx:'Foreign Currency',
-    acc_opening_bal:'Opening Balance',
-    card_preview:'Card Preview', cardholder:'Card Holder',
-    expiry:'Expiry Date', expiry_short:'Exp.',
-    card_network:'Card Network', enter_card:'Enter card number to detect…',
-    card_number:'Card Number',
-    topup_details:'Top-Up Details', target_account:'Account to Credit',
-    btn_topup:'⬆ Top Up',
-    quick_pay:'Quick Bill Pay', payment_details:'Payment Details',
-    from_account:'From Account', merchant:'Merchant / Payee',
-    amount:'Amount', description:'Description',
-    btn_pay:'💸 Pay Now',
-    bills:[['⚡','Electric','Electric Co.','185.50'],['🔥','Gas','Gas Co.','240.00'],['🌐','Internet','ISP','99.90'],['📱','Phone','Carrier','79.90'],['💧','Water','Water Co.','65.00'],['📺','Netflix','Netflix','54.99']],
-    new_transfer:'New Transfer', to_account:'Recipient Account No / ID',
-    btn_send:'⇄ Send', sender_info:'Sender Account Info', select_account:'Please select an account.',
-    all_tx:'All Transactions', filter_all:'All Transactions',
-    filter_credit:'Top-Ups / Credits', filter_debit:'Payments / Debits',
-    personal_info:'Personal Information', change_password:'Change Password',
-    current_password:'Current Password', new_password:'New Password', confirm_password:'Confirm New Password',
-    btn_update:'Update', kyc_verified:'KYC Verified ✓',
-    prof_name:'Full Name', prof_email:'Email', prof_phone:'Phone',
-    prof_tc:'TC Identity', prof_id:'User ID', prof_registered:'Registered',
-    role_admin:'Admin', role_customer:'Customer',
-    user_list:'User List', audit_trail:'Audit Trail',
-    col_name:'Full Name', col_email:'Email', col_tc:'TC ID',
-    col_phone:'Phone', col_role:'Role', col_registered:'Registered',
-    col_accounts:'Accounts / Balance', col_time:'Time', col_user:'User',
-    col_action:'Action', col_detail:'Detail', col_result:'Result',
-    no_accounts:'No accounts yet', no_tx:'No transactions yet', no_tx_found:'No transactions found',
-    balance:'Balance', account:'Account',
-    err_insufficient:'Insufficient balance. Current: ', err_not_found:'Account not found',
-    err_same_acc:'Sender and recipient cannot be the same',
-    err_valid_amount:'Enter a valid amount',
-    err_valid_card:'Enter a valid card number',
-    err_valid_name:'Enter cardholder name',
-    err_valid_exp:'Expiry must be MM/YY format',
-    err_valid_cvv:'CVV must be at least 3 digits',
-    err_select_acc:'Please select an account',
-    err_min_amount:'Enter a valid amount (min 1)',
-    err_merchant:'Enter merchant name',
-    err_from_acc:'Select sender account',
-    err_to_acc:'Enter recipient account',
-    toast_welcome:'Welcome, ',
-    toast_registered:'Account created! 🎉',
-    toast_account_opened:'Account opened: ',
-    toast_topup_ok:' topped up ✓',
-    toast_payment_ok:' paid ✓',
-    toast_transfer_ok:'Transfer complete ✓',
-    toast_pw_ok:'Password updated ✓',
-    msg_topup_ok:'✓ topped up. New balance: ',
-    msg_topup_via:' via ',
-    msg_payment_ok:'✓ paid — ',
-    msg_payment_bal:'. Remaining: ',
-    msg_transfer_ok:'✓ Sent. Ref: ',
-    msg_acc_opened:'✓ Account opened: ',
-    msg_pw_ok:'✓ Password updated successfully',
-    err_old_pw:'Current password is incorrect',
-    err_pw_match:'New passwords do not match',
-    currency:'₺',
-  },
-  ru: {
-    welcome_back:'С возвращением', sign_in_to:'Войдите в свой аккаунт',
-    create_account:'Создать аккаунт', create_account_sub:'Зарегистрируйте новый аккаунт',
-    tab_login:'Войти', tab_register:'Регистрация',
-    lbl_email:'Электронная почта', lbl_password:'Пароль',
-    lbl_fullname:'Полное имя', lbl_phone:'Телефон', lbl_phone_hint:'Начинается с +90',
-    lbl_email2:'Электронная почта',
-    lbl_tcno:'Номер TC Kimlik', lbl_tcno_hint:'11-значный турецкий национальный ID',
-    lbl_pw:'Пароль', lbl_pw_hint:'Мин 6 · 1 заглавная · 1 цифра',
-    lbl_pw2:'Подтвердите пароль',
-    lbl_kvkk:'Я прочитал и принимаю <a href="#">Политику конфиденциальности</a> и <a href="#">Условия использования</a>.',
-    btn_login:'Войти →', btn_register:'Создать аккаунт →',
-    pw_default:'Сила пароля будет показана здесь',
-    pw_s1:'Очень слабый 🔴', pw_s2:'Слабый 🟡', pw_s3:'Хороший 🟢', pw_s4:'Сильный 💪', pw_s5:'Очень сильный 🔐',
-    err_email:'Введите корректный email',
-    err_name:'Имя может содержать только буквы (мин 2)',
-    err_phone:'Турецкий телефон: +90 5XX XXX XX XX',
-    err_tc_len:'Номер TC Kimlik должен быть 11 цифр',
-    err_tc_inv:'Проверка номера TC Kimlik не пройдена',
-    ok_tc:'✓ Номер TC Kimlik верен',
-    err_pw_len:'Минимум 6 символов', err_pw_upper:'1 заглавная буква', err_pw_num:'1 цифра',
-    err_pw_prefix:'Не хватает: ',
-    err_pw2:'Пароли не совпадают',
-    err_email_taken:'Этот email уже зарегистрирован',
-    err_tc_taken:'Этот номер TC Kimlik уже зарегистрирован',
-    err_invalid_creds:'Неверный email или пароль',
-    err_fill_all:'Заполните все поля',
-    err_kvkk:'Необходимо принять условия использования',
-    nav_dashboard:'Главная', nav_accounts:'Мои счета', nav_topup:'Пополнить',
-    nav_payment:'Оплата', nav_transfer:'Перевод', nav_history:'История транзакций',
-    nav_users:'Пользователи', nav_audit:'Журнал аудита', nav_profile:'Профиль',
-    sb_grp_general:'Общее', sb_grp_banking:'Банкинг', sb_grp_admin:'Админ', sb_grp_account:'Мой аккаунт',
-    btn_logout:'Выйти',
-    page_dashboard:'Главная', page_dashboard_sub:'Обзор вашего финансового состояния',
-    page_accounts:'Мои счета', page_accounts_sub:'Управление банковскими счетами',
-    page_topup:'Пополнить счёт', page_topup_sub:'Пополните счёт с помощью карты',
-    page_payment:'Оплата', page_payment_sub:'Оплата счетов и услуг',
-    page_transfer:'Денежный перевод', page_transfer_sub:'Мгновенный перевод между счетами',
-    page_history:'История транзакций', page_history_sub:'Запись всех ваших операций',
-    page_profile:'Мой профиль', page_profile_sub:'Ваша личная информация',
-    page_users:'Пользователи', page_users_sub:'Все зарегистрированные пользователи',
-    page_audit:'Журнал аудита', page_audit_sub:'Все записи операций',
-    stat_total_balance:'Общий баланс', stat_total_in:'Всего пополнено',
-    stat_total_out:'Всего потрачено', stat_accounts:'Счетов',
-    recent_tx:'Последние транзакции', btn_all:'Все →',
-    open_account:'Открыть новый счёт', acc_type:'Тип счёта',
-    acc_demand:'Текущий счёт', acc_savings:'Сберегательный счёт', acc_fx:'Валютный счёт',
-    acc_opening_bal:'Начальный баланс',
-    card_preview:'Предпросмотр карты', cardholder:'Владелец карты',
-    expiry:'Срок действия', expiry_short:'Срок',
-    card_network:'Платёжная система', enter_card:'Введите номер карты…',
-    card_number:'Номер карты',
-    topup_details:'Детали пополнения', target_account:'Счёт для пополнения',
-    btn_topup:'⬆ Пополнить',
-    quick_pay:'Быстрая оплата', payment_details:'Детали оплаты',
-    from_account:'Со счёта', merchant:'Получатель',
-    amount:'Сумма', description:'Описание',
-    btn_pay:'💸 Оплатить',
-    bills:[['⚡','Электричество','Электро','185.50'],['🔥','Газ','Горгаз','240.00'],['🌐','Интернет','ISP','99.90'],['📱','Телефон','Оператор','79.90'],['💧','Вода','Водоканал','65.00'],['📺','Netflix','Netflix','54.99']],
-    new_transfer:'Новый перевод', to_account:'Счёт получателя',
-    btn_send:'⇄ Отправить', sender_info:'Информация об отправителе', select_account:'Выберите счёт.',
-    all_tx:'Все транзакции', filter_all:'Все транзакции',
-    filter_credit:'Пополнения', filter_debit:'Оплата / Списания',
-    personal_info:'Личная информация', change_password:'Изменить пароль',
-    current_password:'Текущий пароль', new_password:'Новый пароль', confirm_password:'Подтвердите новый пароль',
-    btn_update:'Обновить', kyc_verified:'KYC Подтверждён ✓',
-    prof_name:'Полное имя', prof_email:'Email', prof_phone:'Телефон',
-    prof_tc:'TC Kimlik', prof_id:'ID пользователя', prof_registered:'Дата регистрации',
-    role_admin:'Администратор', role_customer:'Клиент',
-    user_list:'Список пользователей', audit_trail:'Журнал аудита',
-    col_name:'Имя', col_email:'Email', col_tc:'TC ID',
-    col_phone:'Телефон', col_role:'Роль', col_registered:'Регистрация',
-    col_accounts:'Счета / Баланс', col_time:'Время', col_user:'Пользователь',
-    col_action:'Действие', col_detail:'Детали', col_result:'Результат',
-    no_accounts:'Счетов пока нет', no_tx:'Транзакций пока нет', no_tx_found:'Транзакции не найдены',
-    balance:'Баланс', account:'Счёт',
-    err_insufficient:'Недостаточно средств. Доступно: ', err_not_found:'Счёт не найден',
-    err_same_acc:'Счёт отправителя и получателя совпадают',
-    err_valid_amount:'Введите корректную сумму',
-    err_valid_card:'Введите корректный номер карты',
-    err_valid_name:'Введите имя держателя карты',
-    err_valid_exp:'Срок действия должен быть ММ/ГГ',
-    err_valid_cvv:'CVV должен быть минимум 3 символа',
-    err_select_acc:'Выберите счёт',
-    err_min_amount:'Введите корректную сумму (мин 1)',
-    err_merchant:'Введите название получателя',
-    err_from_acc:'Выберите счёт отправителя',
-    err_to_acc:'Введите счёт получателя',
-    toast_welcome:'Добро пожаловать, ',
-    toast_registered:'Аккаунт создан! 🎉',
-    toast_account_opened:'Счёт открыт: ',
-    toast_topup_ok:' пополнено ✓',
-    toast_payment_ok:' оплачено ✓',
-    toast_transfer_ok:'Перевод выполнен ✓',
-    toast_pw_ok:'Пароль обновлён ✓',
-    msg_topup_ok:'✓ Пополнено. Новый баланс: ',
-    msg_topup_via:' через ',
-    msg_payment_ok:'✓ Оплачено — ',
-    msg_payment_bal:'. Остаток: ',
-    msg_transfer_ok:'✓ Отправлено. Реф: ',
-    msg_acc_opened:'✓ Счёт открыт: ',
-    msg_pw_ok:'✓ Пароль успешно обновлён',
-    err_old_pw:'Текущий пароль неверен',
-    err_pw_match:'Новые пароли не совпадают',
-    currency:'₺',
-  }
-};
-
-let LANG = localStorage.getItem('ft_lang') || 'tr';
-function t(k){ return T[LANG][k] || T['en'][k] || k; }
-function fmt(n){ return t('currency')+parseFloat(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-
-function setLang(lang){
-  LANG = lang;
-  localStorage.setItem('ft_lang', lang);
-  applyTranslations();
-  if(CU) refreshApp();
-}
-
-function applyTranslations(){
-  /* lang buttons active state */
-  document.querySelectorAll('.lang-btn').forEach(b=>{
-    const l=b.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
-    b.classList.toggle('active', l===LANG);
-  });
-  document.querySelectorAll('.tb-lb').forEach(b=>{
-    const l=b.getAttribute('onclick')?.match(/'(\w+)'/)?.[1];
-    b.classList.toggle('active', l===LANG);
-  });
-  /* data-i18n elements */
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    const k=el.getAttribute('data-i18n');
-    el.textContent=t(k);
-  });
-  /* select options */
-  document.querySelectorAll('[data-i18n-opt]').forEach(el=>{
-    const k=el.getAttribute('data-i18n-opt');
-    el.textContent=t(k);
-  });
-  /* Auth specific fields */
-  setAuthLabels();
-  rebuildQuickBills();
-}
-
-function setAuthLabels(){
-  const tab = document.getElementById('panel-register').style.display==='none'?'login':'register';
-  document.getElementById('auth-title').textContent    = tab==='login'?t('welcome_back'):t('create_account');
-  document.getElementById('auth-sub').textContent      = tab==='login'?t('sign_in_to'):t('create_account_sub');
-  document.getElementById('tab-login-btn').textContent = t('tab_login');
-  document.getElementById('tab-reg-btn').textContent   = t('tab_register');
-  document.getElementById('btn-login-submit').textContent  = t('btn_login');
-  document.getElementById('btn-reg-submit').textContent    = t('btn_register');
-  document.getElementById('btn-logout').textContent        = t('btn_logout');
-  // placeholders
-  const lEmail=document.getElementById('l-email'); if(lEmail)lEmail.placeholder='example@email.com';
-  const lPass=document.getElementById('l-pass');   if(lPass) lPass.placeholder='••••••••';
-  const rName=document.getElementById('r-name');   if(rName) rName.placeholder='John Doe';
-  const rPhone=document.getElementById('r-phone'); if(rPhone)rPhone.placeholder='+90 555 000 00 00';
-  const rEmail=document.getElementById('r-email'); if(rEmail)rEmail.placeholder='example@email.com';
-  const rTc=document.getElementById('r-tcno');     if(rTc)   rTc.placeholder='_ _ _ _ _ _ _ _ _ _ _';
-  const rPass=document.getElementById('r-pass');   if(rPass) rPass.placeholder=t('lbl_pw_hint');
-  const rPass2=document.getElementById('r-pass2'); if(rPass2)rPass2.placeholder=t('lbl_pw2');
-  document.getElementById('lbl-email').textContent    = t('lbl_email');
-  document.getElementById('lbl-password').textContent = t('lbl_password');
-  document.getElementById('lbl-fullname').textContent = t('lbl_fullname');
-  const phn=document.getElementById('lbl-phone'); if(phn){phn.childNodes[0].textContent=t('lbl_phone')+' ';}
-  document.getElementById('lbl-phone-hint').textContent = t('lbl_phone_hint');
-  document.getElementById('lbl-email2').textContent  = t('lbl_email2');
-  const tcl=document.getElementById('lbl-tcno'); if(tcl){tcl.childNodes[0].textContent=t('lbl_tcno')+' ';}
-  document.getElementById('lbl-tcno-hint').textContent = t('lbl_tcno_hint');
-  const pwl=document.getElementById('lbl-pw'); if(pwl){pwl.childNodes[0].textContent=t('lbl_pw')+' ';}
-  document.getElementById('lbl-pw-hint').textContent  = t('lbl_pw_hint');
-  document.getElementById('lbl-pw2').textContent      = t('lbl_pw2');
-  document.getElementById('lbl-kvkk').innerHTML       = t('lbl_kvkk');
-  document.getElementById('pw-lbl').textContent       = t('pw_default');
-  // sidebar groups
-  const sgg=document.getElementById('sb-grp-general'); if(sgg)sgg.textContent=t('sb_grp_general');
-  const sgb=document.getElementById('sb-grp-banking'); if(sgb)sgb.textContent=t('sb_grp_banking');
-  const sga=document.getElementById('sb-grp-admin');   if(sga)sga.textContent=t('sb_grp_admin');
-  const sgac=document.getElementById('sb-grp-account');if(sgac)sgac.textContent=t('sb_grp_account');
-}
-
-function rebuildQuickBills(){
-  const bills=t('bills');
-  const el=document.getElementById('quick-bills');
-  if(!el||!bills)return;
-  el.innerHTML=bills.map(b=>`<button class="btn btn-g" style="justify-content:flex-start;font-size:.8rem" onclick="fillBill('${b[1]}','${b[2]}','${b[3]}')">${b[0]} ${b[1]}</button>`).join('');
-}
-
-function refreshApp(){
-  if(!CU)return;
-  document.getElementById('u-role').textContent=CU.role==='admin'?t('role_admin'):t('role_customer');
-  const curPage=document.querySelector('.page.active')?.id?.replace('page-','');
-  if(curPage){const loaders={dashboard:loadDashboard,accounts:loadAccounts,topup:loadTopUp,payment:loadPayment,transfer:loadTransfer,history:renderHistory,profile:loadProfile,users:renderUsers,audit:renderAudit};if(loaders[curPage])loaders[curPage]();}
-}
-
-/* ═══ DATA STORE ═══ */
-const DB={
-  get users(){return JSON.parse(localStorage.getItem('ft_users')||'[]');},
-  get accounts(){return JSON.parse(localStorage.getItem('ft_accounts')||'[]');},
-  get ledger(){return JSON.parse(localStorage.getItem('ft_ledger')||'[]');},
-  get audit(){return JSON.parse(localStorage.getItem('ft_audit')||'[]');},
-  setUsers(v){localStorage.setItem('ft_users',JSON.stringify(v));},
-  setAccounts(v){localStorage.setItem('ft_accounts',JSON.stringify(v));},
-  setLedger(v){localStorage.setItem('ft_ledger',JSON.stringify(v));},
-  setAudit(v){localStorage.setItem('ft_audit',JSON.stringify(v));},
-};
-function uid(){return Math.random().toString(36).slice(2,10);}
-function nowISO(){return new Date().toISOString();}
-function fmtDate(iso){return new Date(iso).toLocaleString(LANG==='ru'?'ru-RU':LANG==='en'?'en-GB':'tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
-
-(function seed(){
-  if(DB.users.length)return;
-  DB.setUsers([{id:'user_admin',name:'Sistem Yöneticisi',email:'admin@fintech.io',password:'Admin123!',tcno:'12345678901',phone:'+90 555 000 00 00',role:'admin',createdAt:nowISO()}]);
-  DB.setAccounts([{id:'acc_admin1',userId:'user_admin',number:'FT00000001',type:'Vadesiz',balance:50000,createdAt:nowISO(),color:'ac-violet'}]);
-  DB.setLedger([{id:'l0',accountId:'acc_admin1',type:'CREDIT',amount:50000,balanceAfter:50000,desc:'Initial balance',ref:'REF000001',performedBy:'system',createdAt:nowISO()}]);
+(function autoLogin(){
+  const sid=sessionStorage.getItem('ft_sess');
+  if(!sid)return;
+  /* Try remote first */
+  sb().then(c=>c.from('ft_users').select('*').eq('id',sid).single())
+    .then(({data})=>{if(data)loginUser(SB.mapUser(data));else{const u=DB.users.find(x=>x.id===sid);if(u)loginUser(u);}}
+    ).catch(()=>{const u=DB.users.find(x=>x.id===sid);if(u)loginUser(u);});
 })();
 
-let CU=null;
-
-/* ═══ TC KIMLIK ═══ */
-function validateTC(tc){
-  tc=tc.replace(/\s/g,'');
-  if(!/^\d{11}$/.test(tc)||tc[0]==='0')return false;
-  const d=tc.split('').map(Number);
-  if(d.slice(0,10).reduce((a,b)=>a+b,0)%10!==d[10])return false;
-  const odd=d[0]+d[2]+d[4]+d[6]+d[8],even=d[1]+d[3]+d[5]+d[7];
-  return(odd*7-even)%10===d[9];
-}
-
-/* ═══ PASSWORD ═══ */
-function validatePw(pw){
-  const e=[];
-  if(pw.length<6)e.push(t('err_pw_len'));
-  if(!/[A-Z]/.test(pw))e.push(t('err_pw_upper'));
-  if(!/[0-9]/.test(pw))e.push(t('err_pw_num'));
-  return e;
-}
-function pwScore(pw){let s=0;if(pw.length>=6)s++;if(pw.length>=10)s++;if(/[A-Z]/.test(pw)&&/[a-z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[!@#$%^&*]/.test(pw))s++;return Math.min(s,4);}
-
-/* ═══ CARD DETECTION ═══ */
-function detectNet(raw){
-  const n=raw.replace(/\D/g,'');
-  if(!n)return null;
-  if(/^9792/.test(n))return'troy';
-  if(/^3[47]/.test(n))return'amex';
-  if(/^3(?:0[0-5]|[68])/.test(n))return'diners';
-  if(/^6(?:011|5)/.test(n))return'discover';
-  if(/^5[1-5]/.test(n))return'mastercard';
-  if(/^2[2-7]\d{2}/.test(n)){const p=parseInt(n.slice(0,4));if(p>=2221&&p<=2720)return'mastercard';}
-  if(/^4/.test(n))return'visa';
-  return n.length>=1?'unknown':null;
-}
-const NET={mastercard:{name:'Mastercard',color:'#f59e0b'},visa:{name:'Visa',color:'#60a5fa'},troy:{name:'Troy 🇹🇷',color:'#ef4444'},amex:{name:'Amex',color:'#06b6d4'},diners:{name:'Diners',color:'#9ca3af'},discover:{name:'Discover',color:'#f97316'},unknown:{name:'?',color:'#6b7280'}};
-function vcBg(net){return{mastercard:'vc-mc',visa:'vc-vi',troy:'vc-tr',amex:'vc-ax',diners:'vc-d'}[net]||'vc-d';}
-function vcLogo(net,lg){
-  const s=lg?30:20,ml=lg?-12:-8;
-  if(net==='mastercard')return`<div style="display:flex"><div style="width:${s}px;height:${s}px;border-radius:50%;background:#eb001b"></div><div style="width:${s}px;height:${s}px;border-radius:50%;background:#f79e1b;margin-left:${ml}px"></div></div>`;
-  if(net==='visa')return`<div class="visa-t" style="font-size:${lg?'1.1rem':'.78rem'}">VISA</div>`;
-  if(net==='troy')return`<div class="troy-t" style="font-size:${lg?.92:.7}rem">TR<span class="troy-oy">OY</span><div class="troy-dot"></div></div>`;
-  if(net==='amex')return`<div class="amex-t" style="font-size:${lg?.62:.5}rem">AMEX</div>`;
-  if(net==='diners')return`<div style="font-family:sans-serif;font-weight:700;color:#fff;font-size:${lg?.78:.62}rem">Diners</div>`;
-  return'';
-}
-function fmtCard(r){return r.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim();}
-function fmtExp(inp){let v=inp.value.replace(/\D/g,'');if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2,4);inp.value=v;}
-function syncV(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
-function onCard(inp,px){
-  inp.value=fmtCard(inp.value);
-  const net=detectNet(inp.value);
-  const digs=inp.value.replace(/\D/g,'').padEnd(16,'•');
-  syncV(px+'-vcn',digs.slice(0,4)+'\u00a0\u00a0'+digs.slice(4,8)+'\u00a0\u00a0'+digs.slice(8,12)+'\u00a0\u00a0'+digs.slice(12,16));
-  const vc=document.getElementById(px+'-vc');if(vc)vc.className='vcard '+vcBg(net);
-  const vl=document.getElementById(px+'-vclogo');if(vl)vl.innerHTML=net&&net!=='unknown'?vcLogo(net,true):'';
-  const cl=document.getElementById(px+'-clogo');if(cl)cl.innerHTML=net&&net!=='unknown'?vcLogo(net,false):'';
-  const nn=document.getElementById(px+'-netname');
-  if(nn){const info=net?NET[net]:null;nn.textContent=info?info.name:(inp.value.replace(/\s/g,'').length?t('err_valid_card'):t('enter_card'));nn.className='np-name'+(info&&net!=='unknown'?'':' np-none');if(info&&net!=='unknown')nn.style.color=info.color;else nn.style.color='';}
-}
-
-/* ═══ AUTH UI ═══ */
-function switchTab(tab){
-  document.querySelectorAll('.a-tab').forEach((b,i)=>b.classList.toggle('on',(i===0)===(tab==='login')));
-  document.getElementById('panel-login').style.display=tab==='login'?'block':'none';
-  document.getElementById('panel-register').style.display=tab==='register'?'block':'none';
-  document.getElementById('auth-title').textContent=tab==='login'?t('welcome_back'):t('create_account');
-  document.getElementById('auth-sub').textContent=tab==='login'?t('sign_in_to'):t('create_account_sub');
-  hideGErr();
-}
-function showGErr(m){const e=document.getElementById('g-err');document.getElementById('g-err-msg').textContent=m;e.style.display='flex';}
-function hideGErr(){document.getElementById('g-err').style.display='none';}
-function togglePw(id,ico){const i=document.getElementById(id);if(i.type==='password'){i.type='text';ico.textContent='🙈';}else{i.type='password';ico.textContent='👁';}}
-
-function setV(inp,ico,errId,okId,ok,em,om){
-  const i=document.getElementById(inp),ic=ico?document.getElementById(ico):null,e=errId?document.getElementById(errId):null,o=okId?document.getElementById(okId):null;
-  if(!i||!i.value)return;
-  i.className=i.className.replace(/\s*(v-ok|v-err)/g,'');
-  if(ok){i.classList.add('v-ok');if(ic){ic.textContent='✅';ic.style.opacity='.8';}if(e)e.style.display='none';if(o&&om){o.textContent=om;o.style.display='block';}}
-  else{i.classList.add('v-err');if(ic){ic.textContent='❌';ic.style.opacity='.7';}if(e&&em){e.textContent=em;e.style.display='block';}if(o)o.style.display='none';}
-}
-function vName(){const v=document.getElementById('r-name').value.trim();setV('r-name','ico-name','err-name',null,v.length>=2&&/^[a-zA-Z\u00c0-\u024F\u00c0-\u024f\u011e\u011f\u0130\u0131\u015e\u015f\u00dc\u00fc\u00d6\u00f6\u00c7\u00e7\u0400-\u04ff\s]+$/.test(v),t('err_name'));}
-function vPhone(){const v=document.getElementById('r-phone').value.replace(/\s/g,'');setV('r-phone','ico-phone','err-phone',null,/^(\+90|0)?5\d{9}$/.test(v),t('err_phone'));}
-function vEmail(){const v=document.getElementById('r-email').value;setV('r-email','ico-email','err-email',null,/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),t('err_email'));}
-function vTC(){
-  const inp=document.getElementById('r-tcno');
-  const digs=inp.value.replace(/\D/g,'').slice(0,11);
-  inp.value=digs.replace(/(\d{3})(?=\d)/g,'$1 ').trim();
-  const ok=digs.length===11&&validateTC(digs);
-  setV('r-tcno','ico-tc','err-tc','ok-tc',ok,digs.length<11?t('err_tc_len'):t('err_tc_inv'),t('ok_tc'));
-}
-function vPw(){
-  const pw=document.getElementById('r-pass').value;
-  const sc=pwScore(pw);
-  const lbls=['',t('pw_s1'),t('pw_s2'),t('pw_s3'),t('pw_s4')];
-  const cls=['','s1','s2','s3','s4'];
-  for(let i=1;i<=4;i++)document.getElementById('pb'+i).className='pw-bar'+(i<=sc?' '+cls[sc]:'');
-  document.getElementById('pw-lbl').textContent=pw.length?(lbls[sc]||t('pw_s5')):t('pw_default');
-  const errs=validatePw(pw);const el=document.getElementById('err-pass');
-  if(pw.length&&errs.length){el.textContent=t('err_pw_prefix')+errs.join(', ');el.style.display='block';}else el.style.display='none';
-}
-function vPw2(){const p=document.getElementById('r-pass').value,p2=document.getElementById('r-pass2').value;setV('r-pass2','ico-pass2','err-pass2',null,p===p2&&p2.length>0,t('err_pw2'));}
-
-/* ═══ LOGIN / REGISTER / LOGOUT ═══ */
-function doLogin(){
-  const em=document.getElementById('l-email').value.trim().toLowerCase();
-  const pw=document.getElementById('l-pass').value;
-  if(!em||!pw){showGErr(t('err_fill_all'));return;}
-  const u=DB.users.find(x=>x.email.toLowerCase()===em&&x.password===pw);
-  if(!u){showGErr(t('err_invalid_creds'));return;}
-  loginUser(u);
-}
-function doRegister(){
-  const name=document.getElementById('r-name').value.trim();
-  const phone=document.getElementById('r-phone').value.trim();
-  const email=document.getElementById('r-email').value.trim().toLowerCase();
-  const tc=document.getElementById('r-tcno').value.replace(/\s/g,'');
-  const pw=document.getElementById('r-pass').value;
-  const pw2=document.getElementById('r-pass2').value;
-  const kvkk=document.getElementById('kvkk').checked;
-  if(!name||name.length<2){showGErr(t('err_name'));return;}
-  if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showGErr(t('err_email'));return;}
-  if(!/^(\+90|0)?5\d{9}$/.test(phone.replace(/\s/g,''))){showGErr(t('err_phone'));return;}
-  if(!validateTC(tc)){showGErr(t('err_tc_len')+' — '+t('err_tc_inv'));return;}
-  const perrs=validatePw(pw);if(perrs.length){showGErr(t('err_pw_prefix')+perrs.join(', '));return;}
-  if(pw!==pw2){showGErr(t('err_pw2'));return;}
-  if(!kvkk){showGErr(t('err_kvkk'));return;}
-  const users=DB.users;
-  if(users.find(x=>x.email.toLowerCase()===email)){showGErr(t('err_email_taken'));return;}
-  if(users.find(x=>x.tcno===tc)){showGErr(t('err_tc_taken'));return;}
-  const u={id:'user_'+uid(),name,email,password:pw,tcno:tc,phone,role:'customer',createdAt:nowISO()};
-  users.push(u);DB.setUsers(users);
-  const ac={id:'acc_'+uid(),userId:u.id,number:'FT'+Date.now().toString().slice(-8),type:'Vadesiz',balance:0,createdAt:nowISO(),color:'ac-blue'};
-  const accounts=DB.accounts;accounts.push(ac);DB.setAccounts(accounts);
-  addAudit(u.id,'REGISTER','New user: '+name,'SUCCESS');
-  toast(t('toast_registered'),'ok');
-  loginUser(u);
-}
-function loginUser(u){
-  CU=u;sessionStorage.setItem('ft_sess',u.id);
-  addAudit(u.id,'LOGIN',u.email,'SUCCESS');
-  const init=u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('u-ava').textContent=init;
-  document.getElementById('u-name').textContent=u.name;
-  document.getElementById('u-role').textContent=u.role==='admin'?t('role_admin'):t('role_customer');
-  document.getElementById('sb-name').textContent=u.name;
-  document.getElementById('sb-id').textContent=u.id;
-  document.getElementById('admin-nav').style.display=u.role==='admin'?'block':'none';
-  document.getElementById('screen-auth').classList.remove('show');
-  document.getElementById('screen-app').classList.add('show');
-  applyTranslations();
-  goPage('dashboard');
-  toast(t('toast_welcome')+u.name.split(' ')[0]+'! 👋','ok');
-}
-function doLogout(){
-  addAudit(CU?.id||'?','LOGOUT','','SUCCESS');
-  CU=null;sessionStorage.removeItem('ft_sess');
-  document.getElementById('screen-app').classList.remove('show');
-  document.getElementById('screen-auth').classList.add('show');
-  document.getElementById('admin-nav').style.display='none';
-}
-(function autoLogin(){const sid=sessionStorage.getItem('ft_sess');if(sid){const u=DB.users.find(x=>x.id===sid);if(u){loginUser(u);}}})();
-
 /* ═══ NAVIGATION ═══ */
 function goPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -2944,24 +1553,36 @@ function accCard(a){
 }
 function loadAccounts(){const a=myAccs();const el=document.getElementById('accs-list');if(!el)return;el.innerHTML=a.length?a.map(accCard).join(''):`<div class="empty"><div class="empty-ico">💳</div><div class="empty-txt">${t('no_accounts')}</div></div>`;}
 function buildSel(id){const sel=document.getElementById(id);if(!sel)return;sel.innerHTML=myAccs().map(a=>`<option value="${a.id}">${a.number} — ${fmt(a.balance)} (${a.type})</option>`).join('');}
-function createAccount(){
+async function createAccount(){
   const type=document.getElementById('acc-type').value;
   const bal=parseFloat(document.getElementById('acc-bal').value)||0;
   if(bal<0){showMsg('acc-msg',t('err_valid_amount'),'err');return;}
-  const a={id:'acc_'+uid(),userId:CU.id,number:'FT'+Date.now().toString().slice(-8),type,balance:bal,createdAt:nowISO(),color:AC[myAccs().length%3]};
+  const accId='acc_'+uid(),accNum='FT'+Date.now().toString().slice(-8);
+  const a={id:accId,userId:CU.id,number:accNum,type,balance:bal,createdAt:nowISO(),color:AC[myAccs().length%3]};
+  /* Persist to Supabase */
+  try{
+    const c=await sb();
+    await c.from('ft_accounts').insert({id:accId,user_id:CU.id,number:accNum,type,balance:bal,color:a.color});
+    if(bal>0)await c.from('ft_ledger').insert({id:'l_'+uid(),account_id:accId,type:'CREDIT',amount:bal,balance_after:bal,description:'Initial balance',ref:'REF'+uid().toUpperCase(),performed_by:CU.id});
+  }catch(e){console.warn('SB createAccount',e);}
   const accs=DB.accounts;accs.push(a);DB.setAccounts(accs);
-  if(bal>0)appendLedger(a.id,'CREDIT',bal,bal,'Initial balance','system');
-  addAudit(CU.id,'OPEN_ACCOUNT',type+': '+a.number,'SUCCESS');
-  showMsg('acc-msg',t('msg_acc_opened')+a.number,'ok');
-  toast(t('toast_account_opened')+a.number,'ok');
+  appendLedger(accId,'CREDIT',bal,bal,'Initial balance',CU.id);
+  addAudit(CU.id,'OPEN_ACCOUNT',type+': '+accNum,'SUCCESS');
+  showMsg('acc-msg',t('msg_acc_opened')+accNum,'ok');
+  toast(t('toast_account_opened')+accNum,'ok');
   loadAccounts();loadDashboard();
 }
 
 /* ═══ LEDGER ═══ */
 function appendLedger(accId,type,amount,balAfter,desc,by,ref){
   const l=DB.ledger;l.push({id:'l_'+uid(),accountId:accId,type,amount,balanceAfter:balAfter,desc,ref:ref||'REF'+uid().toUpperCase(),performedBy:by,createdAt:nowISO()});DB.setLedger(l);
+  /* async persist */
+  sb().then(c=>c.from('ft_ledger').insert({id:'l_'+uid(),account_id:accId,type,amount,balance_after:balAfter,description:desc,ref:ref||'REF'+uid().toUpperCase(),performed_by:by})).catch(()=>{});
 }
-function addAudit(uid2,action,detail,outcome){const a=DB.audit;a.push({id:'a_'+uid(),userId:uid2,action,detail,outcome,createdAt:nowISO()});DB.setAudit(a);}
+function addAudit(uid2,action,detail,outcome){
+  const a=DB.audit;a.push({id:'a_'+uid(),userId:uid2,action,detail,outcome,createdAt:nowISO()});DB.setAudit(a);
+  sb().then(c=>c.from('ft_audit').insert({id:'a_'+uid(),user_id:uid2,action,detail,outcome})).catch(()=>{});
+}
 
 /* ═══ DASHBOARD ═══ */
 function loadDashboard(){
@@ -3035,68 +1656,170 @@ function doPayment(){
   toast(fmt(amt)+t('toast_payment_ok'),'ok');loadDashboard();
 }
 
-/* ═══ TRANSFER ═══ */
+/* ═══ TRANSFER 3-STEP ═══ */
 let TF_TYPE = 'FAST';
+let TF_STEP = 1;
+let TF_PENDING = {};  // holds validated data between steps
+
+const STRIPE_URL = 'https://buy.stripe.com/test_3cIcN5cTPf93coSfzd3Nm00';
 
 const TF_TYPES = {
-  FAST:{
-    ico:'⚡',
-    label:{tr:'FAST',en:'FAST',ru:'FAST'},
-    timing:{tr:'7/24 Anlık',en:'7/24 Instant',ru:'7/24 Мгновенно'},
-    fee:{tr:'Ücretsiz',en:'Free',ru:'Бесплатно'},
-    desc:{tr:'Fonların Anlık ve Sürekli Transferi — Bankalar arası anlık para transferi',en:'Instant interbank transfer available 24/7, all year round',ru:'Мгновенный межбанковский перевод — круглосуточно, без выходных'},
-    toHint:{tr:'IBAN, Hesap No, Tel (+90) veya E-posta',en:'IBAN, Account No, Phone (+90) or Email',ru:'IBAN, номер счёта, телефон (+90) или e-mail'},
-    toLbl:{tr:'Alıcı (IBAN / Tel / E-posta)',en:'Recipient (IBAN / Phone / Email)',ru:'Получатель (IBAN / Тел / Email)'},
-    limit:100000,
-    limitTxt:{tr:'FAST işlem limiti ₺100.000 (TCMB yönetmeliği)',en:'FAST transaction limit ₺100,000 (CBRT regulation)',ru:'Лимит FAST: ₺100 000 (требование ЦБ Турции)'},
-    rules:{tr:['⚡ Anlık — genellikle 5 saniye içinde ulaşır','🕐 7/24 hizmet — resmi tatillerde de çalışır','💰 Maksimum ₺100.000 / işlem','📱 Tel veya e-posta ile Kolay Adres desteği','🏦 Tüm Türk bankaları desteklenir'],en:['⚡ Instant — typically arrives within 5 seconds','🕐 7/24 service — works on public holidays too','💰 Max ₺100,000 per transaction','📱 Kolay Adres: send via phone or email','🏦 Supported by all Turkish banks'],ru:['⚡ Мгновенно — обычно за 5 секунд','🕐 7/24 — работает в праздники','💰 Максимум ₺100 000 за транзакцию','📱 Поддержка Kolay Adres (тел/email)','🏦 Все турецкие банки']},
-    swift:false,badge:'b-b'
-  },
-  EFT:{
-    ico:'🏦',
-    label:{tr:'EFT',en:'EFT',ru:'EFT'},
-    timing:{tr:'Hafta içi 08:00–17:00',en:'Weekdays 08:00–17:00',ru:'Будни 08:00–17:00'},
-    fee:{tr:'İşlem başı ücret uygulanabilir',en:'Fee may apply per transaction',ru:'Возможна комиссия за операцию'},
-    desc:{tr:'Elektronik Fon Transferi — Bankalar arası büyük tutarlı transferler için',en:'Electronic Fund Transfer — for large interbank transfers during business hours',ru:'Электронный перевод средств — крупные межбанковские переводы в рабочее время'},
-    toHint:{tr:'Alıcı IBAN numarası (TR ile başlar)',en:'Recipient IBAN (starts with TR)',ru:'IBAN получателя (начинается с TR)'},
-    toLbl:{tr:'Alıcı IBAN',en:'Recipient IBAN',ru:'IBAN получателя'},
-    limit:null,
-    limitTxt:null,
-    rules:{tr:['🏦 Bankacılık saatleri: 08:00–17:00 (hafta içi)','💰 Tutar limiti yoktur','⏰ Saat 17:00 sonrası işlemler ertesi gün işlenir','📄 IBAN zorunludur','🔁 Her işlem için referans numarası üretilir'],en:['🏦 Processing hours: 08:00–17:00 (weekdays)','💰 No amount limit','⏰ After 17:00 → processed next business day','📄 IBAN is mandatory','🔁 Unique reference number per transaction'],ru:['🏦 Рабочие часы: 08:00–17:00 (будни)','💰 Ограничений по сумме нет','⏰ После 17:00 → обрабатывается на следующий день','📄 IBAN обязателен','🔁 Уникальный реф. номер для каждой операции']},
-    swift:false,badge:'b-a'
-  },
-  HAVALE:{
-    ico:'⇄',
-    label:{tr:'Havale',en:'HAVALE',ru:'HAVALE'},
-    timing:{tr:'Anlık (aynı banka)',en:'Instant (same bank)',ru:'Мгновенно (один банк)'},
-    fee:{tr:'Ücretsiz',en:'Free',ru:'Бесплатно'},
-    desc:{tr:'Havale — Aynı banka içi anlık para transferi',en:'Intrabank instant transfer — between accounts at the same bank',ru:'Внутрибанковский мгновенный перевод'},
-    toHint:{tr:'Alıcı hesap no veya IBAN',en:'Recipient account number or IBAN',ru:'Номер счёта или IBAN получателя'},
-    toLbl:{tr:'Alıcı Hesap / IBAN',en:'Recipient Account / IBAN',ru:'Счёт / IBAN получателя'},
-    limit:null,
-    limitTxt:null,
-    rules:{tr:['⚡ Anlık — banka içi işlem, anında tamamlanır','💰 Tutar limiti yoktur','🔒 Sadece aynı bankadaki hesaplara','🆓 Ücret alınmaz','📋 Referans numarası ile takip edilebilir'],en:['⚡ Instant — intrabank, completes immediately','💰 No amount limit','🔒 Only between accounts at the same bank','🆓 No fee charged','📋 Trackable via reference number'],ru:['⚡ Мгновенно — внутрибанковская операция','💰 Без ограничений по сумме','🔒 Только внутри одного банка','🆓 Без комиссии','📋 Отслеживается по реф. номеру']},
-    swift:false,badge:'b-g'
-  },
-  SWIFT:{
-    ico:'🌐',
-    label:{tr:'SWIFT',en:'SWIFT',ru:'SWIFT'},
-    timing:{tr:'1–5 iş günü',en:'1–5 business days',ru:'1–5 рабочих дней'},
-    fee:{tr:'Correspondent bank ücreti uygulanır',en:'Correspondent bank fee applies',ru:'Взимается комиссия банка-корреспондента'},
-    desc:{tr:'SWIFT — Uluslararası para transferi, BIC/SWIFT kodu ile',en:'International wire transfer via SWIFT network with BIC code and IBAN',ru:'Международный банковский перевод через сеть SWIFT с BIC-кодом'},
-    toHint:{tr:'Alıcı IBAN (uluslararası format)',en:'Recipient IBAN (international format)',ru:'IBAN получателя (международный формат)'},
-    toLbl:{tr:'Alıcı IBAN',en:'Recipient IBAN',ru:'IBAN получателя'},
-    limit:null,
-    limitTxt:null,
-    rules:{tr:['🌐 BIC/SWIFT kodu zorunludur (8 veya 11 karakter)','📅 İşlem süresi: 1–5 iş günü','💱 Yabancı para birimi seçilebilir','💰 Muhabir banka ücreti alıcıdan kesililebilir','📄 MT103 mesaj standardı — gerçek SWIFT transferi ile aynı yapı'],en:['🌐 BIC/SWIFT code is mandatory (8 or 11 chars)','📅 Processing: 1–5 business days','💱 Foreign currency supported','💰 Correspondent bank fee may be deducted from amount','📄 MT103 message structure — mirrors real SWIFT format'],ru:['🌐 BIC/SWIFT код обязателен (8 или 11 символов)','📅 Срок обработки: 1–5 рабочих дней','💱 Поддержка иностранных валют','💰 Комиссия может быть удержана из суммы','📄 Структура MT103 — зеркалит реальный SWIFT']},
-    swift:true,badge:'b-b'
-  }
+  FAST:{ico:'⚡',label:{tr:'FAST',en:'FAST',ru:'FAST'},timing:{tr:'7/24 Anlık',en:'7/24 Instant',ru:'Мгновенно'},fee:{tr:'Ücretsiz',en:'Free',ru:'Бесплатно'},desc:{tr:'Fonların Anlık ve Sürekli Transferi — Bankalar arası anlık para transferi',en:'Instant interbank transfer available 24/7',ru:'Мгновенный межбанковский перевод 24/7'},toHint:{tr:'IBAN, Hesap No, Tel (+90) veya E-posta',en:'IBAN, Account No, Phone (+90) or Email',ru:'IBAN, номер счёта, телефон (+90) или email'},toLbl:{tr:'Alıcı (IBAN / Tel / E-posta)',en:'Recipient (IBAN / Phone / Email)',ru:'Получатель (IBAN / Тел / Email)'},limit:100000,limitTxt:{tr:'FAST işlem limiti ₺100.000 (TCMB yönetmeliği)',en:'FAST limit ₺100,000 per transaction (CBRT)',ru:'Лимит FAST: ₺100 000 за транзакцию (ЦБ Турции)'},rules:{tr:['⚡ Anlık — genellikle 5 saniye içinde ulaşır','🕐 7/24 hizmet — resmi tatillerde de çalışır','💰 Maksimum ₺100.000 / işlem','📱 Tel veya e-posta ile Kolay Adres desteği'],en:['⚡ Instant — typically within 5 seconds','🕐 7/24 service — works on holidays','💰 Max ₺100,000 per transaction','📱 Kolay Adres: phone or email supported'],ru:['⚡ Мгновенно — обычно за 5 секунд','🕐 7/24, включая праздники','💰 Максимум ₺100 000','📱 Поддержка телефона/email']},swift:false,badge:'b-b'},
+  EFT:{ico:'🏦',label:{tr:'EFT',en:'EFT',ru:'EFT'},timing:{tr:'Hafta içi 08:00–17:00',en:'Weekdays 08:00–17:00',ru:'Будни 08:00–17:00'},fee:{tr:'Ücret uygulanabilir',en:'Fee may apply',ru:'Возможна комиссия'},desc:{tr:'Elektronik Fon Transferi — Bankalar arası büyük tutarlı transferler',en:'Electronic Fund Transfer — large interbank transfers',ru:'Электронный перевод средств'},toHint:{tr:'Alıcı IBAN (TR ile başlar)',en:'Recipient IBAN (starts with TR)',ru:'IBAN получателя (начинается с TR)'},toLbl:{tr:'Alıcı IBAN',en:'Recipient IBAN',ru:'IBAN получателя'},limit:null,limitTxt:null,rules:{tr:['🏦 İşlem saatleri: 08:00–17:00 hafta içi','💰 Tutar limiti yoktur','⏰ 17:00 sonrası → ertesi gün işlenir','📄 IBAN zorunludur'],en:['🏦 Processing: 08:00–17:00 weekdays','💰 No amount limit','⏰ After 17:00 → next business day','📄 IBAN mandatory'],ru:['🏦 Обработка: 08:00–17:00 будни','💰 Без ограничений по сумме','⏰ После 17:00 → следующий рабочий день','📄 IBAN обязателен']},swift:false,badge:'b-a'},
+  HAVALE:{ico:'⇄',label:{tr:'Havale',en:'HAVALE',ru:'HAVALE'},timing:{tr:'Anlık (aynı banka)',en:'Instant (same bank)',ru:'Мгновенно (один банк)'},fee:{tr:'Ücretsiz',en:'Free',ru:'Бесплатно'},desc:{tr:'Havale — Aynı banka içi anlık para transferi',en:'Intrabank instant transfer',ru:'Внутрибанковский мгновенный перевод'},toHint:{tr:'Hesap no veya IBAN',en:'Account number or IBAN',ru:'Номер счёта или IBAN'},toLbl:{tr:'Alıcı Hesap / IBAN',en:'Recipient Account / IBAN',ru:'Счёт / IBAN'},limit:null,limitTxt:null,rules:{tr:['⚡ Anlık tamamlanır','💰 Limit yok','🔒 Sadece aynı banka','🆓 Ücretsiz'],en:['⚡ Completes instantly','💰 No limit','🔒 Same bank only','🆓 No fee'],ru:['⚡ Мгновенно','💰 Без ограничений','🔒 Только один банк','🆓 Без комиссии']},swift:false,badge:'b-g'},
+  SWIFT:{ico:'🌐',label:{tr:'SWIFT',en:'SWIFT',ru:'SWIFT'},timing:{tr:'1–5 iş günü',en:'1–5 business days',ru:'1–5 рабочих дней'},fee:{tr:'Muhabir banka ücreti',en:'Correspondent bank fee',ru:'Комиссия банка-корреспондента'},desc:{tr:'SWIFT — Uluslararası para transferi, BIC/SWIFT kodu ile',en:'International wire transfer via SWIFT with BIC code',ru:'Международный перевод через SWIFT с BIC-кодом'},toHint:{tr:'Alıcı IBAN (uluslararası)',en:'Recipient IBAN (international)',ru:'IBAN получателя (международный)'},toLbl:{tr:'Alıcı IBAN',en:'Recipient IBAN',ru:'IBAN получателя'},limit:null,limitTxt:null,rules:{tr:['🌐 BIC/SWIFT kodu zorunludur','📅 1–5 iş günü','💱 Yabancı para birimi','📄 MT103 standardı'],en:['🌐 BIC/SWIFT code required','📅 1–5 business days','💱 Foreign currency','📄 MT103 standard'],ru:['🌐 BIC/SWIFT код обязателен','📅 1–5 рабочих дней','💱 Иностранная валюта','📄 Стандарт MT103']},swift:true,badge:'b-b'},
 };
 
+/* ── Step navigation ── */
+function goTfStep(n){
+  TF_STEP = n;
+  [1,2,3].forEach(i=>{
+    const p=document.getElementById('tf-panel-'+i);
+    if(p) p.style.display = i===n ? '' : 'none';
+    const s=document.getElementById('tsp-'+i);
+    if(s){
+      s.classList.remove('on','done');
+      if(i===n) s.classList.add('on');
+      else if(i<n) s.classList.add('done');
+    }
+  });
+}
+
+/* ── "Continue" button — validates current step then advances ── */
+function tfNextStep(){
+  if(TF_STEP===1){
+    // Validate step 1
+    const fromId=document.getElementById('tf-from').value;
+    const toRef=document.getElementById('tf-to').value.trim();
+    const amt=parseFloat(document.getElementById('tf-amt').value);
+    const desc=document.getElementById('tf-desc').value.trim();
+    if(!fromId) return showMsg('tf-msg',t('err_from_acc'),'err');
+    if(!toRef)  return showMsg('tf-msg',t('err_to_acc'),'err');
+    if(isNaN(amt)||amt<0.01) return showMsg('tf-msg',t('err_valid_amount'),'err');
+    if(TF_TYPE==='FAST'&&amt>100000) return showMsg('tf-msg','⚠ '+(TF_TYPES.FAST.limitTxt[LANG]||TF_TYPES.FAST.limitTxt.en),'err');
+    if(TF_TYPE==='SWIFT'){
+      const bic=document.getElementById('tf-bic').value.trim();
+      if(!bic||bic.length<8) return showMsg('tf-msg','Enter valid BIC code (8–11 chars)','err');
+    }
+    const fa=DB.accounts.find(x=>x.id===fromId);
+    if(!fa) return showMsg('tf-msg',t('err_not_found'),'err');
+    if(fa.balance<amt) return showMsg('tf-msg',t('err_insufficient')+fmt(fa.balance),'err');
+    // Store
+    TF_PENDING = {fromId, toRef, amt, desc, type:TF_TYPE,
+      bic: TF_TYPE==='SWIFT'?document.getElementById('tf-bic').value.trim():'',
+      currency: TF_TYPE==='SWIFT'?document.getElementById('tf-currency').value:'TRY',
+      benName: TF_TYPE==='SWIFT'?document.getElementById('tf-ben-name').value.trim():'',
+    };
+    goTfStep(2);
+    // Populate summary in step 2
+    const sb=document.getElementById('tf-summary-banner');
+    if(sb) sb.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><div><span style="color:var(--text3);font-size:.68rem">${t('tf_type_lbl')}</span> <strong>${TF_TYPES[TF_TYPE].label[LANG]}</strong> &nbsp;·&nbsp; <span style="color:var(--text3);font-size:.68rem">${t('tf_to_lbl')}</span> <strong>${toRef.slice(0,20)}</strong></div><div style="font-size:1.1rem;font-weight:700;color:#34d399">${fmt(amt)}</div></div>`;
+  }
+  else if(TF_STEP===2){
+    // Validate card info
+    const card=document.getElementById('tf-card').value.replace(/\s/g,'');
+    const cname=document.getElementById('tf-cname').value.trim();
+    const exp=document.getElementById('tf-exp').value.trim();
+    const cvv=document.getElementById('tf-cvv').value.trim();
+    if(card.length<13) return showMsg('tf-card-msg',t('err_valid_card'),'err');
+    if(!cname)         return showMsg('tf-card-msg',t('err_valid_name'),'err');
+    if(!/^\d{2}\/\d{2}$/.test(exp)) return showMsg('tf-card-msg',t('err_valid_exp'),'err');
+    if(cvv.length<3)   return showMsg('tf-card-msg',t('err_valid_cvv'),'err');
+    TF_PENDING.card = card; TF_PENDING.cname = cname; TF_PENDING.exp = exp;
+    const net=detectNet(card); const nl=NET[net]?.name||'Card';
+    TF_PENDING.cardLabel = nl+' ····'+card.slice(-4);
+    goTfStep(3);
+    buildReview();
+  }
+}
+
+function buildReview(){
+  const d=TF_PENDING;
+  const fa=DB.accounts.find(x=>x.id===d.fromId);
+  const ta=DB.accounts.find(x=>x.id===d.toRef||x.number===d.toRef);
+  const toDisplay=ta?`${ta.number} (${t('balance')}: ${fmt(ta.balance)})`:d.toRef;
+  const ref='PREV'+uid().toUpperCase().slice(0,8);
+  TF_PENDING.previewRef=ref;
+  const rb=document.getElementById('tf-review-body');
+  if(!rb)return;
+  const row=(lbl,val,color='')=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bd);padding:4px 0"><span style="color:var(--text3)">${lbl}</span><strong style="color:${color||'var(--text)'}">${val}</strong></div>`;
+  rb.innerHTML=
+    row(t('tf_type_lbl'), TF_TYPES[d.type].label[LANG])+
+    row(t('tf_from_lbl'), fa?fa.number:d.fromId)+
+    row(t('tf_to_lbl'),   toDisplay)+
+    row(t('tf_amt_lbl'),  fmt(d.amt), '#34d399')+
+    (d.desc?row(t('description'), d.desc):'')+
+    row(t('tf_card_lbl'), d.cardLabel)+
+    (d.bic?row('BIC/SWIFT', d.bic):'')+
+    (d.currency&&d.currency!=='TRY'?row('Currency', d.currency):'')+
+    row(t('tf_ref_lbl'), ref, 'var(--blue3)');
+}
+
+/* ── Confirm Internal Transfer (no Stripe) ── */
+function confirmInternal(){
+  const d=TF_PENDING;
+  const accs=DB.accounts;
+  const fa=accs.find(x=>x.id===d.fromId);
+  if(!fa) return showMsg('tf-confirm-msg',t('err_not_found'),'err');
+  if(fa.balance<d.amt) return showMsg('tf-confirm-msg',t('err_insufficient')+fmt(fa.balance),'err');
+  const ta=accs.find(x=>x.id===d.toRef||x.number===d.toRef);
+  const ref='TRF'+uid().toUpperCase();
+  const typeLabel=TF_TYPES[d.type].label.en;
+  if(ta&&fa.id!==ta.id){
+    fa.balance-=d.amt; ta.balance+=d.amt; DB.setAccounts(accs);
+    appendLedger(fa.id,'DEBIT',d.amt,fa.balance,`[${typeLabel}] → ${ta.number}`+(d.desc?' | '+d.desc:''),CU.id,ref);
+    appendLedger(ta.id,'CREDIT',d.amt,ta.balance,`[${typeLabel}] ← ${fa.number}`+(d.desc?' | '+d.desc:''),CU.id,ref);
+  } else {
+    fa.balance-=d.amt; DB.setAccounts(accs);
+    appendLedger(fa.id,'DEBIT',d.amt,fa.balance,`[${typeLabel}] → ${d.toRef}`+(d.desc?' | '+d.desc:''),CU.id,ref);
+  }
+  addAudit(CU.id,'TRANSFER_'+d.type,fmt(d.amt)+' → '+d.toRef,'SUCCESS');
+  showMsg('tf-confirm-msg',t('msg_transfer_ok')+ref,'ok');
+  toast(`[${typeLabel}] `+fmt(d.amt)+' '+t('toast_transfer_ok'),'ok');
+  TF_PENDING={};
+  setTimeout(()=>{ goTfStep(1); loadTransfer(); loadDashboard(); }, 2200);
+}
+
+/* ── Confirm & Pay via Stripe ── */
+function confirmAndPay(){
+  const d=TF_PENDING;
+  if(!d.fromId) return toast('Please complete step 1 first','err');
+  // Log the intent
+  addAudit(CU.id,'STRIPE_REDIRECT',fmt(d.amt)+' via Stripe','INITIATED');
+  // Debit the internal account immediately (optimistic)
+  const accs=DB.accounts;
+  const fa=accs.find(x=>x.id===d.fromId);
+  if(fa&&fa.balance>=d.amt){
+    fa.balance-=d.amt; DB.setAccounts(accs);
+    const ref='STRIPE'+uid().toUpperCase().slice(0,8);
+    TF_PENDING.stripeRef=ref;
+    appendLedger(fa.id,'DEBIT',d.amt,fa.balance,`[STRIPE] → ${d.toRef}`+(d.desc?' | '+d.desc:''),CU.id,ref);
+    addAudit(CU.id,'STRIPE_PAYMENT',fmt(d.amt)+' ref:'+ref,'SUCCESS');
+    toast('🔒 Redirecting to Stripe Checkout...','info');
+    loadDashboard();
+  }
+  // Open Stripe in new tab (Stripe blocks all iframe embedding)
+  setTimeout(()=>{
+    window.open(STRIPE_URL,'_blank','noopener,noreferrer');
+    showMsg('tf-confirm-msg','↗ Stripe Checkout opened in new tab. Complete your payment there.','ok');
+  }, 400);
+}
+
+/* ── Copy test card 4242 ── */
+function copyCard4242(btn){
+  const num='4242 4242 4242 4242';
+  navigator.clipboard.writeText(num).then(()=>{
+    const o=btn.textContent; btn.textContent='✓ Copied!';
+    btn.style.background='var(--green2)'; btn.style.color='var(--green)';
+    setTimeout(()=>{ btn.textContent=o; btn.style.background=''; btn.style.color=''; },1800);
+  }).catch(()=>{ toast('4242 4242 4242 4242','info'); });
+}
+
+/* ── buildTfTypeGrid + selectTfType + existing helpers ── */
 function buildTfTypeGrid(){
   const g=document.getElementById('tf-type-grid');if(!g)return;
   g.innerHTML=Object.entries(TF_TYPES).map(([k,v])=>`
-    <div class="quick-btn ${k===TF_TYPE?'style="border-color:var(--blue2);background:var(--s3)"':''}" id="tft-${k}" onclick="selectTfType('${k}')" style="${k===TF_TYPE?'border-color:var(--blue2);background:var(--s3);':''}">
+    <div class="quick-btn" id="tft-${k}" onclick="selectTfType('${k}')" style="${k===TF_TYPE?'border-color:var(--blue2);background:var(--s3);':''}">
       <div class="qi">${v.ico}</div>
       <div class="ql" style="font-size:.78rem;font-weight:700">${v.label[LANG]||v.label.en}</div>
       <div style="font-size:.6rem;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${v.timing[LANG]||v.timing.en}</div>
@@ -3107,38 +1830,21 @@ function selectTfType(type){
   TF_TYPE=type;
   buildTfTypeGrid();
   const v=TF_TYPES[type];
-  // Banner
   document.getElementById('tf-banner-ico').textContent=v.ico;
   document.getElementById('tf-banner-title').textContent=(v.label[LANG]||v.label.en)+' — '+(v.desc[LANG]||v.desc.en).split('—')[0].trim();
   document.getElementById('tf-banner-desc').textContent=(v.desc[LANG]||v.desc.en);
   document.getElementById('tf-banner-timing').textContent='⏱ '+(v.timing[LANG]||v.timing.en);
   document.getElementById('tf-banner-fee').textContent='💳 '+(v.fee[LANG]||v.fee.en);
-  // Badge
   const badge=document.getElementById('tf-type-badge');
-  badge.textContent=v.label[LANG]||v.label.en;
-  badge.className='bdg '+v.badge;
-  // To label + hint
-  const lbl=document.getElementById('tf-to-label');
-  if(lbl)lbl.textContent=v.toLbl[LANG]||v.toLbl.en;
-  const hint=document.getElementById('tf-to-hint');
-  if(hint)hint.textContent=v.toHint[LANG]||v.toHint.en;
-  // SWIFT extra fields
-  const sf=document.getElementById('tf-swift-fields');
-  if(sf)sf.style.display=v.swift?'block':'none';
-  // Rules card
+  badge.textContent=v.label[LANG]||v.label.en; badge.className='bdg '+v.badge;
+  const lbl=document.getElementById('tf-to-label');if(lbl)lbl.textContent=v.toLbl[LANG]||v.toLbl.en;
+  const hint=document.getElementById('tf-to-hint');if(hint)hint.textContent=v.toHint[LANG]||v.toHint.en;
+  const sf=document.getElementById('tf-swift-fields');if(sf)sf.style.display=v.swift?'block':'none';
   const rb=document.getElementById('tf-rules-body');
   const rt=document.getElementById('tf-rules-title');
-  if(rb&&rt){
-    const rules=v.rules[LANG]||v.rules.en;
-    rt.textContent=(LANG==='tr'?'Transfer Kuralları':LANG==='ru'?'Правила перевода':'Transfer Rules')+' — '+v.label.en;
-    rb.innerHTML=rules.map(r=>`<div style="padding:3px 0;border-bottom:1px solid var(--bd)">${r}</div>`).join('');
-  }
-  // Limit warning reset
-  const warn=document.getElementById('tf-limit-warn');
-  if(warn)warn.style.display='none';
-  // Clear to field
-  const toEl=document.getElementById('tf-to');
-  if(toEl){toEl.value='';toEl.placeholder=v.toHint[LANG]||v.toHint.en;}
+  if(rb&&rt){const rules=v.rules[LANG]||v.rules.en;rt.textContent='Transfer Rules — '+v.label.en;rb.innerHTML=rules.map(r=>`<div style="padding:3px 0;border-bottom:1px solid var(--bd)">${r}</div>`).join('');}
+  const warn=document.getElementById('tf-limit-warn');if(warn)warn.style.display='none';
+  const toEl=document.getElementById('tf-to');if(toEl){toEl.value='';toEl.placeholder=v.toHint[LANG]||v.toHint.en;}
   document.getElementById('tf-to-ico').textContent='';
 }
 
@@ -3146,7 +1852,6 @@ function validateTfTo(){
   const v=document.getElementById('tf-to').value.trim();
   const ico=document.getElementById('tf-to-ico');
   if(!v){ico.textContent='';return;}
-  // Detect what kind of input
   if(/^TR\d{24}$/i.test(v.replace(/\s/g,''))){ico.textContent='🏦';}
   else if(/^FT\d{8}/.test(v)){ico.textContent='✅';}
   else if(/^\+90/.test(v)||/^05\d{9}/.test(v)){ico.textContent='📱';}
@@ -3157,93 +1862,27 @@ function validateTfTo(){
 function updateTfInfo(){
   const v=document.getElementById('tf-from')?.value,a=DB.accounts.find(x=>x.id===v),el=document.getElementById('tf-info');
   if(!el)return;
-  if(a)el.innerHTML=`<span style="color:var(--text3)">${t('col_accounts').split('/')[0].trim()}</span>: <strong>${a.number}</strong><br><span style="color:var(--text3)">${t('acc_type')}</span>: <strong>${a.type}</strong><br><span style="color:var(--text3)">${t('balance')}</span>: <strong style="color:#34d399">${fmt(a.balance)}</strong><br><span style="color:var(--text3)">ID</span>: <span style="font-family:'Space Mono',monospace;font-size:.7rem">${a.id}</span>`;
+  if(a)el.innerHTML=`<span style="color:var(--text3)">${t('col_accounts').split('/')[0].trim()}</span>: <strong>${a.number}</strong><br><span style="color:var(--text3)">${t('acc_type')}</span>: <strong>${a.type}</strong><br><span style="color:var(--text3)">${t('balance')}</span>: <strong style="color:#34d399">${fmt(a.balance)}</strong>`;
   else el.textContent=t('select_account');
-  // Check FAST limit
-  const amt=parseFloat(document.getElementById('tf-amt')?.value||0);
-  checkFastLimit(amt);
+  checkFastLimit(parseFloat(document.getElementById('tf-amt')?.value)||0);
 }
 
 function checkFastLimit(amt){
   const v=TF_TYPES[TF_TYPE];
   const warn=document.getElementById('tf-limit-warn');
   if(!warn)return;
-  if(v.limit&&amt>v.limit){
-    warn.style.display='block';
-    warn.textContent='⚠ '+(v.limitTxt[LANG]||v.limitTxt.en)+' ('+fmt(v.limit)+')';
-  } else warn.style.display='none';
+  if(v.limit&&amt>v.limit){warn.style.display='block';warn.textContent='⚠ '+(v.limitTxt[LANG]||v.limitTxt.en)+' ('+fmt(v.limit)+')';}
+  else warn.style.display='none';
 }
 
 function loadTransfer(){
-  buildSel('tf-from');
-  updateTfInfo();
-  selectTfType(TF_TYPE);
+  TF_STEP=1; TF_PENDING={};
+  buildSel('tf-from'); updateTfInfo(); selectTfType(TF_TYPE); goTfStep(1);
 }
 
-function doTransfer(){
-  const fromId=document.getElementById('tf-from').value;
-  const toRef=document.getElementById('tf-to').value.trim();
-  const amt=parseFloat(document.getElementById('tf-amt').value);
-  const desc=document.getElementById('tf-desc').value.trim();
-  const type=TF_TYPE;
+/* Legacy doTransfer kept as alias for confirmInternal */
+function doTransfer(){ confirmInternal(); }
 
-  if(!fromId)return showMsg('tf-msg',t('err_from_acc'),'err');
-  if(!toRef)return showMsg('tf-msg',t('err_to_acc'),'err');
-  if(isNaN(amt)||amt<0.01)return showMsg('tf-msg',t('err_valid_amount'),'err');
-
-  // FAST limit check
-  if(type==='FAST'&&amt>100000){
-    const lw=TF_TYPES.FAST.limitTxt[LANG]||TF_TYPES.FAST.limitTxt.en;
-    return showMsg('tf-msg','⚠ '+lw,'err');
-  }
-
-  // SWIFT BIC validation
-  if(type==='SWIFT'){
-    const bic=document.getElementById('tf-bic').value.trim();
-    if(!bic||bic.length<8)return showMsg('tf-msg','Enter a valid BIC/SWIFT code (8–11 characters)','err');
-    const benName=document.getElementById('tf-ben-name').value.trim();
-    if(!benName)return showMsg('tf-msg','Enter beneficiary name','err');
-  }
-
-  const accs=DB.accounts;
-  const fa=accs.find(x=>x.id===fromId);
-  if(!fa)return showMsg('tf-msg',t('err_not_found'),'err');
-  if(fa.balance<amt)return showMsg('tf-msg',t('err_insufficient')+fmt(fa.balance),'err');
-
-  // For internal transfers, find recipient account
-  const ta=accs.find(x=>x.id===toRef||x.number===toRef||x.number===toRef.replace(/\s/g,''));
-
-  const ref=(type==='SWIFT'?'SWIFT':type.slice(0,3))+uid().toUpperCase();
-  const typeLabel=TF_TYPES[type].label.en;
-
-  if(ta&&fa.id!==ta.id){
-    // Internal transfer — both accounts found
-    fa.balance-=amt;ta.balance+=amt;DB.setAccounts(accs);
-    appendLedger(fa.id,'DEBIT',amt,fa.balance,`[${typeLabel}] → ${ta.number}`+(desc?' | '+desc:''),CU.id,ref);
-    appendLedger(ta.id,'CREDIT',amt,ta.balance,`[${typeLabel}] ← ${fa.number}`+(desc?' | '+desc:''),CU.id,ref);
-    addAudit(CU.id,'TRANSFER_'+type,fmt(amt)+' '+fa.number+' → '+ta.number,'SUCCESS');
-    const timingNote=type==='SWIFT'?' (1–5 business days)':type==='EFT'?' (next business day if after 17:00)':'';
-    showMsg('tf-msg',t('msg_transfer_ok')+ref+timingNote,'ok');
-  } else if(type==='SWIFT'||type==='EFT'||!ta){
-    // External / outbound transfer — debit only
-    fa.balance-=amt;DB.setAccounts(accs);
-    const bic=type==='SWIFT'?document.getElementById('tf-bic').value.trim():'';
-    const cur=type==='SWIFT'?document.getElementById('tf-currency').value:'TRY';
-    appendLedger(fa.id,'DEBIT',amt,fa.balance,`[${typeLabel}] → ${toRef.slice(0,20)}${bic?' BIC:'+bic:''} ${cur!=='TRY'?'('+cur+')':''}`.trim()+(desc?' | '+desc:''),CU.id,ref);
-    addAudit(CU.id,'TRANSFER_'+type,fmt(amt)+' → '+toRef.slice(0,20)+(bic?' ('+bic+')':''),'SUCCESS');
-    const statusMsg=type==='SWIFT'?` Processing: 1–5 business days`:type==='EFT'?` Processing: next business day if sent after 17:00`:'';
-    showMsg('tf-msg',t('msg_transfer_ok')+ref+statusMsg,'ok');
-  } else {
-    return showMsg('tf-msg',t('err_same_acc'),'err');
-  }
-
-  toast(`[${typeLabel}] `+fmt(amt)+' '+t('toast_transfer_ok'),'ok');
-  document.getElementById('tf-to').value='';
-  document.getElementById('tf-amt').value='';
-  document.getElementById('tf-to-ico').textContent='';
-  if(type==='SWIFT'){['tf-bic','tf-ben-name','tf-ben-bank'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
-  loadTransfer();loadDashboard();
-}
 
 /* ═══ HISTORY ═══ */
 function renderHistory(){
@@ -3299,9 +1938,9 @@ function renderAudit(){
 function showMsg(id,msg,type){const el=document.getElementById(id);if(!el)return;el.className='mb '+type;el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},6000);}
 function toast(msg,type='ok'){const icons={ok:'✓',err:'✕',info:'ℹ'};const el=document.createElement('div');el.className='toast toast-'+type;el.innerHTML='<span>'+icons[type]+'</span>'+msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),4000);}
 
+
 /* ═══ INIT ═══ */
 applyTranslations();
 </script>
 </body>
 </html>
->>>>>>> c271eb334aefa25652185adeab1bba16c3f32d77
