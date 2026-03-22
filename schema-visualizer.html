@@ -117,7 +117,7 @@
     </div>
   </div>
   <div class="controls">
-    <div id="stats"><div class="stat"><b id="s-tables">13</b> tables</div><div class="stat"><b id="s-cols">0</b> columns</div><div class="stat"><b id="s-fks">0</b> FK links</div></div>
+    <div id="stats"><div class="stat"><b id="s-tables">14</b> tables</div><div class="stat"><b id="s-cols">0</b> columns</div><div class="stat"><b id="s-fks">0</b> FK links</div></div>
     <button class="btn" onclick="fitAll()">⊡ Fit All</button>
     <button class="btn" onclick="resetLayout()">↺ Reset</button>
   </div>
@@ -268,18 +268,25 @@ const SCHEMA = [
       {n:"related_account_id",t:"text",fk:"ft_accounts"},{n:"related_tx_id",t:"text"},
       {n:"resolution_note",t:"text"},{n:"created_at",t:"timestamptz",nn:true},
       {n:"updated_at",t:"timestamptz"},{n:"resolved_at",t:"timestamptz"}
+    ]},
+  { id:"ft_security_answers", label:"ft_security_answers", icon:"🔐", category:"auth",
+    desc:"Stores hashed answers to security questions for password recovery.",
+    cols:[
+      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users",nn:true},
+      {n:"question_id",t:"int",nn:true},{n:"answer_hash",t:"text",nn:true},
+      {n:"created_at",t:"timestamptz",nn:true},{n:"updated_at",t:"timestamptz",nn:true}
     ]}
 ];
 
 const CAT_COLORS={auth:"#6c63ff",finance:"#00d4aa",ops:"#74b9ff",support:"#ff9f43"};
 const LAYOUT=[
   {id:"ft_users",x:480,y:40},{id:"ft_accounts",x:860,y:40},
-  {id:"ft_ledger",x:1220,y:40},{id:"ft_audit",x:860,y:360},
-  {id:"ft_cards",x:1220,y:360},{id:"ft_loans",x:480,y:360},
-  {id:"ft_loan_payments",x:100,y:360},{id:"ft_beneficiaries",x:100,y:660},
-  {id:"ft_notifications",x:480,y:660},{id:"ft_kyc_documents",x:860,y:660},
-  {id:"ft_transaction_requests",x:1220,y:660},{id:"ft_exchange_rates",x:100,y:980},
-  {id:"ft_support_tickets",x:480,y:980},
+  {id:"ft_ledger",x:1220,y:40},{id:"ft_security_answers",x:100,y:40},
+  {id:"ft_audit",x:860,y:360},{id:"ft_cards",x:1220,y:360},
+  {id:"ft_loans",x:480,y:360},{id:"ft_loan_payments",x:100,y:360},
+  {id:"ft_beneficiaries",x:100,y:660},{id:"ft_notifications",x:480,y:660},
+  {id:"ft_kyc_documents",x:860,y:660},{id:"ft_transaction_requests",x:1220,y:660},
+  {id:"ft_exchange_rates",x:100,y:980},{id:"ft_support_tickets",x:480,y:980},
 ];
 
 let scale=0.72, panX=20, panY=10;
