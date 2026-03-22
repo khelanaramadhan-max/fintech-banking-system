@@ -329,6 +329,21 @@ input,button,select{font-family:inherit;}
         <div class="af-wrap"><input type="password" id="r-pass2" oninput="vPw2()" autocomplete="new-password"><span class="af-ico" id="ico-pass2"></span></div>
         <div class="af-err" id="err-pass2"></div>
       </div>
+      <div class="g2" style="margin-bottom:14px">
+        <div class="fld">
+          <label>Security Question</label>
+          <select id="r-sq-id" class="af-wrap" style="width:100%;height:41px;background:var(--s2);border:1.5px solid var(--bd2);border-radius:var(--r3);color:var(--text);font-size:.88rem;outline:none" required>
+            <option value="1">What was the name of your first pet?</option>
+            <option value="2">In what city were you born?</option>
+            <option value="3">What is your mother's maiden name?</option>
+            <option value="4">What high school did you attend?</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Your Answer</label>
+          <div class="af-wrap"><input type="text" id="r-sq-ans" placeholder="Memorable answer"><span class="af-ico">🔒</span></div>
+        </div>
+      </div>
       <div class="chk-row">
         <input type="checkbox" id="kvkk">
         <label for="kvkk" id="lbl-kvkk"></label>
@@ -1557,12 +1572,15 @@ async function doRegister(){
   const pw=document.getElementById('r-pass').value;
   const pw2=document.getElementById('r-pass2').value;
   const kvkk=document.getElementById('kvkk').checked;
+  const sqId=document.getElementById('r-sq-id').value;
+  const sqAns=document.getElementById('r-sq-ans').value.trim();
   if(!name||name.length<2){showGErr(t('err_name'));return;}
   if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showGErr(t('err_email'));return;}
   if(!/^(\+90|0)?5\d{9}$/.test(phone.replace(/\s/g,''))){showGErr(t('err_phone'));return;}
   if(!validateTC(tc)){showGErr(t('err_tc_len')+' — '+t('err_tc_inv'));return;}
   const perrs=validatePw(pw);if(perrs.length){showGErr(t('err_pw_prefix')+perrs.join(', '));return;}
   if(pw!==pw2){showGErr(t('err_pw2'));return;}
+  if(!sqAns){showGErr("Please provide a security answer");return;}
   if(!kvkk){showGErr(t('err_kvkk'));return;}
   /* Check duplicates */
   const localUsers=DB.users;
@@ -1577,6 +1595,8 @@ async function doRegister(){
     const{data:dup}=await c.from('ft_users').select('id').eq('email',email);
     if(dup&&dup.length){showGErr(t('err_email_taken'));return;}
     await c.from('ft_users').insert({id:u.id,name,email,password:pw,tcno:tc,phone,role:'customer'});
+    const sqHash = await sha256(sqAns);
+    await c.from('ft_security_answers').insert({user_id: u.id, question_id: parseInt(sqId), answer_hash: sqHash});
     const accId='acc_'+uid(),accNum='FT'+Date.now().toString().slice(-8);
     await c.from('ft_accounts').insert({id:accId,user_id:u.id,number:accNum,type:'Vadesiz',balance:0,color:'ac-blue'});
     await c.from('ft_ledger').insert({id:'l_'+uid(),account_id:accId,type:'CREDIT',amount:0.01,balance_after:0,description:'Account opened',ref:'REF'+uid().toUpperCase(),performed_by:u.id});
@@ -2229,66 +2249,69 @@ const SECURITY_QUESTIONS = {
 };
 let currentForgotQuestionId = null;
 
+async function sha256(text) {
+  const msgBuffer = new TextEncoder().encode(text.trim().toLowerCase());
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function setupSecurityQuestion() {
-  const qId = document.getElementById("sq-id").value;
-  const ans = document.getElementById("sq-ans").value;
+  const qId = parseInt(document.getElementById("sq-id").value);
+  const ans = document.getElementById("sq-ans").value.trim();
   let msgEl = document.getElementById("sq-msg");
-  if(!ans) {
-    msgEl.className = "mb err"; msgEl.innerText = "Please enter an answer"; msgEl.style.display = "block"; return;
-  }
+  if(!ans) { msgEl.className = "mb err"; msgEl.innerText = "Please enter an answer"; msgEl.style.display = "block"; return; }
   try {
-    const res = await fetch("/api/auth/security-questions", {
-      method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer "+localStorage.getItem("ft_token") },
-      body: JSON.stringify({ answers: [{ question_id: parseInt(qId), answer: ans }] })
-    });
-    if(res.ok) {
-      msgEl.className = "mb ok"; msgEl.innerText = "Security question saved successfully"; msgEl.style.display = "block";
-      document.getElementById("sq-ans").value = "";
-    } else {
-      let err = await res.json();
-      msgEl.className = "mb err"; msgEl.innerText = err.detail || "Error saving question"; msgEl.style.display = "block";
-    }
-  } catch(e) { msgEl.className = "mb err"; msgEl.innerText = "Network error"; msgEl.style.display = "block"; }
+    const c = await sb();
+    const sqHash = await sha256(ans);
+    await c.from('ft_security_answers').delete().eq('user_id', CU.id);
+    await c.from('ft_security_answers').insert({user_id: CU.id, question_id: qId, answer_hash: sqHash});
+    msgEl.className = "mb ok"; msgEl.innerText = "Security question saved successfully"; msgEl.style.display = "block";
+    document.getElementById("sq-ans").value = "";
+  } catch(e) { msgEl.className = "mb err"; msgEl.innerText = e.message || "Error saving question"; msgEl.style.display = "block"; }
 }
 
 async function fetchSecurityQuestion() {
-  const email = document.getElementById("f-email").value;
-  if(!email) return alert("Enter email first");
+  const email = document.getElementById("f-email").value.trim().toLowerCase();
+  let alertMsg = document.getElementById("g-err");
+  if(!email) return showGErr("Enter email first");
   try {
-    const res = await fetch(`/api/auth/security-questions/challenge?email=${encodeURIComponent(email)}`);
-    if(res.ok) {
-      const data = await res.json();
-      currentForgotQuestionId = data.question_ids[0];
+    const c = await sb();
+    const {data: u} = await c.from('ft_users').select('id').eq('email', email).single();
+    if(!u) return showGErr("No user found with this email.");
+    TF_PENDING.recoverUserId = u.id; // using global state obj
+    const {data: ans} = await c.from('ft_security_answers').select('question_id').eq('user_id', u.id);
+    if(ans && ans.length > 0) {
+      currentForgotQuestionId = ans[0].question_id;
       document.getElementById("f-question-text").innerText = SECURITY_QUESTIONS[currentForgotQuestionId] || "Security Question";
       document.getElementById("forgot-step-1").style.display = "none";
       document.getElementById("forgot-step-2").style.display = "block";
-      document.getElementById("g-err").style.display = "none";
+      alertMsg.style.display = "none";
     } else {
-      let alertMsg = document.getElementById("g-err");
-      document.getElementById("g-err-msg").innerText = "No security questions found for this email.";
-      alertMsg.style.display = "flex";
+      showGErr("No security questions found for this email.");
     }
-  } catch(e) { console.error(e); }
+  } catch(e) { showGErr(e.message || "Network error fetching user"); }
 }
 
 async function submitSecurityAnswer() {
-  const email = document.getElementById("f-email").value;
-  const answer = document.getElementById("f-answer").value;
+  const answer = document.getElementById("f-answer").value.trim();
   const newPass = document.getElementById("f-new-pass").value;
   if(!answer || newPass.length < 6) return alert("Answer required and password must be at least 6 characters.");
   try {
-    const res = await fetch("/api/auth/recover-password", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email, question_id: currentForgotQuestionId, answer: answer, new_password: newPass })
-    });
-    if(res.ok) {
-      alert("Password reset successfully! You can now log in.");
-      switchTab("login");
-    } else {
-      let err = await res.json();
-      alert("Error: " + (err.detail || "Incorrect answer"));
+    const c = await sb();
+    const {data: ansRow} = await c.from('ft_security_answers').select('answer_hash').eq('user_id', TF_PENDING.recoverUserId).eq('question_id', currentForgotQuestionId);
+    if(!ansRow || ansRow.length === 0) return alert("Security question not found or not set");
+    
+    const storedHash = ansRow[0].answer_hash;
+    const givenHash = await sha256(answer);
+    
+    if(storedHash !== givenHash) {
+      return alert("Error: Incorrect answer");
     }
-  } catch(e) { console.error(e); }
+    
+    await c.from('ft_users').update({password: newPass}).eq('id', TF_PENDING.recoverUserId);
+    alert("Password reset successfully! You can now log in.");
+    switchTab("login");
+  } catch(e) { alert(e.message || "Error recovering password"); }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

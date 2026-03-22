@@ -306,6 +306,8 @@ class RegisterRequest(BaseModel):
     phone:       str
     national_id: str
     password:    str = Field(..., min_length=6)
+    security_question_id: Optional[int] = None
+    security_answer: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email:    EmailStr
@@ -416,6 +418,13 @@ def register(body: RegisterRequest, request: Request):
         raise HTTPException(409, "Email already registered")
     try:
         user = create_user_in_db(body.full_name, str(body.email), body.phone, body.national_id, body.password)
+        if body.security_question_id and body.security_answer:
+            ans_hash = hashlib.sha256(body.security_answer.strip().lower().encode()).hexdigest()
+            supabase.table("ft_security_answers").insert({
+                "user_id": user["user_id"],
+                "question_id": body.security_question_id,
+                "answer_hash": ans_hash
+            }).execute()
         token = create_token({"user_id": user["user_id"], "role": user["role"], "customer_id": user["customer_id"]})
         add_audit_to_db(user["user_id"], "REGISTER", f"user:{user['user_id']}", "SUCCESS",
                         request.client.host if request.client else None)
