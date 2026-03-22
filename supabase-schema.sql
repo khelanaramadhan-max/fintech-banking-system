@@ -19,6 +19,25 @@
 --   ft_support_tickets    → Customer support tickets
 -- ============================================================
 
+-- ============================================================
+-- 0. CLEANUP EXISTING TABLES
+-- This drops all existing tables so the schema can be recreated freshly.
+-- ============================================================
+drop table if exists public.ft_support_tickets cascade;
+drop table if exists public.ft_exchange_rates cascade;
+drop table if exists public.ft_transaction_requests cascade;
+drop table if exists public.ft_kyc_documents cascade;
+drop table if exists public.ft_notifications cascade;
+drop table if exists public.ft_beneficiaries cascade;
+drop table if exists public.ft_loan_payments cascade;
+drop table if exists public.ft_loans cascade;
+drop table if exists public.ft_cards cascade;
+drop table if exists public.ft_audit cascade;
+drop table if exists public.ft_ledger cascade;
+drop table if exists public.ft_accounts cascade;
+drop table if exists public.ft_users cascade;
+
+-- ============================================================
 -- ── Extensions ─────────────────────────────────────────────
 create extension if not exists "pgcrypto";
 create extension if not exists "uuid-ossp";
