@@ -287,6 +287,7 @@ input,button,select{font-family:inherit;}
         <div class="af-wrap"><input type="password" id="l-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"><span class="af-ico btn" onclick="togglePw('l-pass',this)">👁</span></div>
       </div>
       <button class="btn-submit" onclick="doLogin()" id="btn-login-submit"></button>
+      <div style="text-align:center;margin-top:14px"><a href="#" onclick="switchTab('forgot')" style="color:var(--blue3);font-size:.75rem;font-weight:700;text-decoration:none">Forgot Password?</a></div>
     </div>
 
     <!-- REGISTER -->
@@ -334,6 +335,33 @@ input,button,select{font-family:inherit;}
       </div>
       <button class="btn-submit" onclick="doRegister()" id="btn-reg-submit"></button>
     </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div id="panel-forgot" style="display:none">
+      <div id="forgot-step-1">
+        <div class="af">
+          <label>Email Address</label>
+          <div class="af-wrap"><input type="email" id="f-email"><span class="af-ico">✉</span></div>
+        </div>
+        <button class="btn-submit" style="margin-top:14px" onclick="fetchSecurityQuestion()">Next ➔</button>
+      </div>
+      <div id="forgot-step-2" style="display:none">
+        <div class="af">
+          <label>Security Question</label>
+          <div style="font-size:.8rem;color:var(--text);margin-bottom:10px;padding:10px;background:var(--s2);border-radius:var(--r3);border:1px solid var(--bd2)" id="f-question-text"></div>
+        </div>
+        <div class="af">
+          <label>Your Answer</label>
+          <div class="af-wrap"><input type="text" id="f-answer"></div>
+        </div>
+        <div class="af">
+          <label>New Password</label>
+          <div class="af-wrap"><input type="password" id="f-new-pass"></div>
+        </div>
+        <button class="btn-submit" style="margin-top:14px" onclick="submitSecurityAnswer()">Reset Password</button>
+      </div>
+      <div style="text-align:center;margin-top:14px"><a href="#" onclick="switchTab('login')" style="color:var(--text3);font-size:.75rem;font-weight:600;text-decoration:none">← Back to Login</a></div>
+    </div>
   </div>
 </div>
 
@@ -371,9 +399,13 @@ input,button,select{font-family:inherit;}
       <div class="sb-it" onclick="goPage('transfer')"><span class="sb-ico">⇄</span> <span data-i18n="nav_transfer"></span></div>
       <div class="sb-it" onclick="goPage('history')"><span class="sb-ico">📋</span> <span data-i18n="nav_history"></span></div>
       <div id="admin-nav" style="display:none">
-        <div class="sb-grp" id="sb-grp-admin"></div>
+        <div class="sb-grp">ADMIN</div>
+        <div class="sb-it" onclick="goPage('approvals')"><span class="sb-ico">⏳</span> Pending Approvals<span id="sb-badge" style="margin-left:auto;background:#dc2626;color:#fff;border-radius:9px;padding:1px 7px;font-size:.62rem;font-weight:700"></span></div>
+        <div class="sb-it" onclick="goPage('admin-loans')"><span class="sb-ico">💰</span> Loan Requests</div>
+        <div class="sb-it" onclick="goPage('admin-kyc')"><span class="sb-ico">🪪</span> KYC Review</div>
         <div class="sb-it" onclick="goPage('users')"><span class="sb-ico">👥</span> <span data-i18n="nav_users"></span></div>
         <div class="sb-it" onclick="goPage('audit')"><span class="sb-ico">🔍</span> <span data-i18n="nav_audit"></span></div>
+        <div class="sb-it" onclick="window.open('../schema-visualizer.html','_blank')"><span class="sb-ico">🗂</span> Schema Visualizer ↗</div>
       </div>
       <div class="sb-grp" id="sb-grp-account"></div>
       <div class="sb-it" onclick="goPage('profile')"><span class="sb-ico">👤</span> <span data-i18n="nav_profile"></span></div>
@@ -744,6 +776,30 @@ input,button,select{font-family:inherit;}
               <div class="mb" id="cp-msg"></div>
             </div>
           </div>
+          
+          <div class="card" style="grid-column: 1 / -1;">
+            <div class="card-hd"><span class="card-title">Security Questions Recovery</span></div>
+            <div class="card-body">
+              <p style="font-size:.75rem;color:var(--text2);margin-bottom:12px">Set up a security question to recover your account if you forget your password.</p>
+              <div class="g2">
+                <div class="fld">
+                  <label>Select Question</label>
+                  <select id="sq-id">
+                    <option value="1">What was the name of your first pet?</option>
+                    <option value="2">In what city were you born?</option>
+                    <option value="3">What is your mother's maiden name?</option>
+                    <option value="4">What high school did you attend?</option>
+                  </select>
+                </div>
+                <div class="fld">
+                  <label>Your Answer</label>
+                  <input type="text" id="sq-ans" placeholder="Make it memorable">
+                </div>
+              </div>
+              <div class="fm"><button class="btn btn-p" onclick="setupSecurityQuestion()">Save Security Question</button></div>
+              <div class="mb" id="sq-msg"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -781,6 +837,43 @@ input,button,select{font-family:inherit;}
       </div>
 
 
+
+      <!-- PENDING APPROVALS (admin) -->
+      <div id="page-approvals" class="page">
+        <div class="ph"><div class="pt">⏳ Pending Approvals</div><div class="ps">Review and approve or reject large/flagged transaction requests.</div></div>
+        <div id="approvals-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">TRANSACTION QUEUE</span><button class="btn btn-g btn-sm" onclick="renderApprovals()">↻ Refresh</button></div>
+          <div class="tw"><table class="tbl">
+            <thead><tr><th>ID</th><th>Initiated By</th><th>From Account</th><th>To Account</th><th>Amount</th><th>Risk</th><th>Description</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="approvals-tb"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ADMIN LOANS -->
+      <div id="page-admin-loans" class="page">
+        <div class="ph"><div class="pt">💰 Loan Management</div><div class="ps">Review, approve or reject customer loan applications.</div></div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">ALL LOAN APPLICATIONS</span><button class="btn btn-g btn-sm" onclick="renderAdminLoans()">↻ Refresh</button></div>
+          <div class="tw"><table class="tbl">
+            <thead><tr><th>Loan ID</th><th>Customer</th><th>Type</th><th>Amount</th><th>Rate</th><th>Term</th><th>Monthly</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="admin-loans-tb"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ADMIN KYC -->
+      <div id="page-admin-kyc" class="page">
+        <div class="ph"><div class="pt">🪪 KYC Review</div><div class="ps">Verify or reject customer identity documents.</div></div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">KYC SUBMISSIONS</span><button class="btn btn-g btn-sm" onclick="renderAdminKyc()">↻ Refresh</button></div>
+          <div class="tw"><table class="tbl">
+            <thead><tr><th>KYC ID</th><th>User ID</th><th>Doc Type</th><th>Filename</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <tbody id="admin-kyc-tb"></tbody>
+          </table></div>
+        </div>
+      </div>
 
     </main>
   </div>
@@ -1267,8 +1360,21 @@ function refreshApp(){
   if(curPage){const loaders={dashboard:loadDashboard,accounts:loadAccounts,topup:loadTopUp,payment:loadPayment,transfer:loadTransfer,history:renderHistory,profile:loadProfile,users:renderUsers,audit:renderAudit};if(loaders[curPage])loaders[curPage]();}
 }
 
-/* ═══ DATA STORE ═══ */
+/* ═══ SUPABASE CONFIG ═══ */
+const SUPA_URL='https://llchohlypyizjrzuypxr.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxsY2hvaGx5cHlpempyenV5cHhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NjkwNjEsImV4cCI6MjA4OTI0NTA2MX0.THTxZkZ7Rc1pPvH1V3WGmLz4lGtfhyRYBbEBKlIHoPU';
+
+let _sb=null;
+async function sb(){
+  if(_sb)return _sb;
+  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+  _sb=createClient(SUPA_URL,SUPA_KEY);
+  return _sb;
+}
+
+/* ═══ DATA STORE — Supabase + localStorage cache ═══ */
 const DB={
+  /* --- sync cache getters (localStorage) --- */
   get users(){return JSON.parse(localStorage.getItem('ft_users')||'[]');},
   get accounts(){return JSON.parse(localStorage.getItem('ft_accounts')||'[]');},
   get ledger(){return JSON.parse(localStorage.getItem('ft_ledger')||'[]');},
@@ -1277,16 +1383,51 @@ const DB={
   setAccounts(v){localStorage.setItem('ft_accounts',JSON.stringify(v));},
   setLedger(v){localStorage.setItem('ft_ledger',JSON.stringify(v));},
   setAudit(v){localStorage.setItem('ft_audit',JSON.stringify(v));},
+  /* --- async Supabase methods --- */
+  async fetchUsers(){
+    try{const c=await sb();const{data}=await c.from('ft_users').select('*');if(data){this.setUsers(data.map(SB.mapUser));return data.map(SB.mapUser);}return this.users;}
+    catch(e){console.warn('SB fetchUsers',e);return this.users;}
+  },
+  async fetchAccounts(userId){
+    try{const c=await sb();let q=c.from('ft_accounts').select('*');if(userId)q=q.eq('user_id',userId);const{data}=await q;if(data){const mapped=data.map(SB.mapAcc);this.setAccounts(merged(this.accounts,mapped));return mapped;}return userId?this.accounts.filter(a=>a.userId===userId):this.accounts;}
+    catch(e){console.warn('SB fetchAccounts',e);return userId?this.accounts.filter(a=>a.userId===userId):this.accounts;}
+  },
+  async fetchLedger(userId){
+    try{
+      const c=await sb();
+      const accs=await this.fetchAccounts(userId);
+      const ids=accs.map(a=>a.id);
+      if(!ids.length)return[];
+      const{data}=await c.from('ft_ledger').select('*').in('account_id',ids).order('created_at',{ascending:false}).limit(200);
+      if(data){const mapped=data.map(SB.mapLedger);this.setLedger(mapped);return mapped;}
+      return this.ledger;
+    }catch(e){console.warn('SB fetchLedger',e);return this.ledger;}
+  },
+  async fetchAudit(){
+    try{const c=await sb();const{data}=await c.from('ft_audit').select('*').order('created_at',{ascending:false}).limit(200);if(data){const mapped=data.map(SB.mapAudit);this.setAudit(mapped);return mapped;}return this.audit;}
+    catch(e){console.warn('SB fetchAudit',e);return this.audit;}
+  },
 };
+
+/* row mappers — Supabase snake_case → app camelCase */
+const SB={
+  mapUser:r=>({id:r.id,name:r.name,email:r.email,password:r.password,tcno:r.tcno,phone:r.phone,role:r.role,createdAt:r.created_at}),
+  mapAcc:r=>({id:r.id,userId:r.user_id,number:r.number,type:r.type,balance:parseFloat(r.balance),color:r.color||'ac-blue',createdAt:r.created_at}),
+  mapLedger:r=>({id:r.id,accountId:r.account_id,type:r.type,amount:parseFloat(r.amount),balanceAfter:parseFloat(r.balance_after),desc:r.description,ref:r.ref,performedBy:r.performed_by,createdAt:r.created_at}),
+  mapAudit:r=>({id:r.id,userId:r.user_id,action:r.action,detail:r.detail,outcome:r.outcome,createdAt:r.created_at}),
+};
+
+function merged(local,remote){const m={};[...local,...remote].forEach(x=>m[x.id]=x);return Object.values(m);}
+
 function uid(){return Math.random().toString(36).slice(2,10);}
 function nowISO(){return new Date().toISOString();}
 function fmtDate(iso){return new Date(iso).toLocaleString(LANG==='ru'?'ru-RU':LANG==='en'?'en-GB':'tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
 
+/* Seed localStorage only if completely empty (Supabase is seeded via SQL) */
 (function seed(){
   if(DB.users.length)return;
   DB.setUsers([{id:'user_admin',name:'Sistem Yöneticisi',email:'admin@fintech.io',password:'Admin123!',tcno:'12345678901',phone:'+90 555 000 00 00',role:'admin',createdAt:nowISO()}]);
   DB.setAccounts([{id:'acc_admin1',userId:'user_admin',number:'FT00000001',type:'Vadesiz',balance:50000,createdAt:nowISO(),color:'ac-violet'}]);
-  DB.setLedger([{id:'l0',accountId:'acc_admin1',type:'CREDIT',amount:50000,balanceAfter:50000,desc:'Initial balance',ref:'REF000001',performedBy:'system',createdAt:nowISO()}]);
 })();
 
 let CU=null;
@@ -1393,15 +1534,22 @@ function vPw(){
 function vPw2(){const p=document.getElementById('r-pass').value,p2=document.getElementById('r-pass2').value;setV('r-pass2','ico-pass2','err-pass2',null,p===p2&&p2.length>0,t('err_pw2'));}
 
 /* ═══ LOGIN / REGISTER / LOGOUT ═══ */
-function doLogin(){
+async function doLogin(){
   const em=document.getElementById('l-email').value.trim().toLowerCase();
   const pw=document.getElementById('l-pass').value;
   if(!em||!pw){showGErr(t('err_fill_all'));return;}
-  const u=DB.users.find(x=>x.email.toLowerCase()===em&&x.password===pw);
+  /* Try Supabase first, fall back to local cache */
+  let u=null;
+  try{
+    const c=await sb();
+    const{data}=await c.from('ft_users').select('*').eq('email',em).single();
+    if(data&&data.password===pw){u=SB.mapUser(data);}
+  }catch(_){}
+  if(!u){u=DB.users.find(x=>x.email.toLowerCase()===em&&x.password===pw);}
   if(!u){showGErr(t('err_invalid_creds'));return;}
   loginUser(u);
 }
-function doRegister(){
+async function doRegister(){
   const name=document.getElementById('r-name').value.trim();
   const phone=document.getElementById('r-phone').value.trim();
   const email=document.getElementById('r-email').value.trim().toLowerCase();
@@ -1416,13 +1564,26 @@ function doRegister(){
   const perrs=validatePw(pw);if(perrs.length){showGErr(t('err_pw_prefix')+perrs.join(', '));return;}
   if(pw!==pw2){showGErr(t('err_pw2'));return;}
   if(!kvkk){showGErr(t('err_kvkk'));return;}
-  const users=DB.users;
-  if(users.find(x=>x.email.toLowerCase()===email)){showGErr(t('err_email_taken'));return;}
-  if(users.find(x=>x.tcno===tc)){showGErr(t('err_tc_taken'));return;}
-  const u={id:'user_'+uid(),name,email,password:pw,tcno:tc,phone,role:'customer',createdAt:nowISO()};
-  users.push(u);DB.setUsers(users);
-  const ac={id:'acc_'+uid(),userId:u.id,number:'FT'+Date.now().toString().slice(-8),type:'Vadesiz',balance:0,createdAt:nowISO(),color:'ac-blue'};
-  const accounts=DB.accounts;accounts.push(ac);DB.setAccounts(accounts);
+  /* Check duplicates */
+  const localUsers=DB.users;
+  if(localUsers.find(x=>x.email.toLowerCase()===email)){showGErr(t('err_email_taken'));return;}
+  if(localUsers.find(x=>x.tcno===tc)){showGErr(t('err_tc_taken'));return;}
+  const newId='user_'+uid();
+  const u={id:newId,name,email,password:pw,tcno:tc,phone,role:'customer',createdAt:nowISO()};
+  /* Insert to Supabase */
+  try{
+    const c=await sb();
+    /* check remote duplicate */
+    const{data:dup}=await c.from('ft_users').select('id').eq('email',email);
+    if(dup&&dup.length){showGErr(t('err_email_taken'));return;}
+    await c.from('ft_users').insert({id:u.id,name,email,password:pw,tcno:tc,phone,role:'customer'});
+    const accId='acc_'+uid(),accNum='FT'+Date.now().toString().slice(-8);
+    await c.from('ft_accounts').insert({id:accId,user_id:u.id,number:accNum,type:'Vadesiz',balance:0,color:'ac-blue'});
+    await c.from('ft_ledger').insert({id:'l_'+uid(),account_id:accId,type:'CREDIT',amount:0.01,balance_after:0,description:'Account opened',ref:'REF'+uid().toUpperCase(),performed_by:u.id});
+    const ac={id:accId,userId:u.id,number:accNum,type:'Vadesiz',balance:0,createdAt:nowISO(),color:'ac-blue'};
+    const accounts=DB.accounts;accounts.push(ac);DB.setAccounts(accounts);
+  }catch(e){console.warn('Supabase register failed, using local',e);}
+  localUsers.push(u);DB.setUsers(localUsers);
   addAudit(u.id,'REGISTER','New user: '+name,'SUCCESS');
   toast(t('toast_registered'),'ok');
   loginUser(u);
@@ -1440,6 +1601,11 @@ function loginUser(u){
   document.getElementById('screen-auth').classList.remove('show');
   document.getElementById('screen-app').classList.add('show');
   applyTranslations();
+  /* Hydrate local cache from Supabase in background */
+  DB.fetchAccounts(u.role==='admin'?undefined:u.id).then(accs=>{
+    DB.setAccounts(accs);
+    DB.fetchLedger(u.id).then(led=>DB.setLedger(led));
+  }).catch(()=>{});
   goPage('dashboard');
   toast(t('toast_welcome')+u.name.split(' ')[0]+'! 👋','ok');
 }
@@ -1450,7 +1616,14 @@ function doLogout(){
   document.getElementById('screen-auth').classList.add('show');
   document.getElementById('admin-nav').style.display='none';
 }
-(function autoLogin(){const sid=sessionStorage.getItem('ft_sess');if(sid){const u=DB.users.find(x=>x.id===sid);if(u){loginUser(u);}}})();
+(function autoLogin(){
+  const sid=sessionStorage.getItem('ft_sess');
+  if(!sid)return;
+  /* Try remote first */
+  sb().then(c=>c.from('ft_users').select('*').eq('id',sid).single())
+    .then(({data})=>{if(data)loginUser(SB.mapUser(data));else{const u=DB.users.find(x=>x.id===sid);if(u)loginUser(u);}}
+    ).catch(()=>{const u=DB.users.find(x=>x.id===sid);if(u)loginUser(u);});
+})();
 
 /* ═══ NAVIGATION ═══ */
 function goPage(name){
@@ -1473,24 +1646,36 @@ function accCard(a){
 }
 function loadAccounts(){const a=myAccs();const el=document.getElementById('accs-list');if(!el)return;el.innerHTML=a.length?a.map(accCard).join(''):`<div class="empty"><div class="empty-ico">💳</div><div class="empty-txt">${t('no_accounts')}</div></div>`;}
 function buildSel(id){const sel=document.getElementById(id);if(!sel)return;sel.innerHTML=myAccs().map(a=>`<option value="${a.id}">${a.number} — ${fmt(a.balance)} (${a.type})</option>`).join('');}
-function createAccount(){
+async function createAccount(){
   const type=document.getElementById('acc-type').value;
   const bal=parseFloat(document.getElementById('acc-bal').value)||0;
   if(bal<0){showMsg('acc-msg',t('err_valid_amount'),'err');return;}
-  const a={id:'acc_'+uid(),userId:CU.id,number:'FT'+Date.now().toString().slice(-8),type,balance:bal,createdAt:nowISO(),color:AC[myAccs().length%3]};
+  const accId='acc_'+uid(),accNum='FT'+Date.now().toString().slice(-8);
+  const a={id:accId,userId:CU.id,number:accNum,type,balance:bal,createdAt:nowISO(),color:AC[myAccs().length%3]};
+  /* Persist to Supabase */
+  try{
+    const c=await sb();
+    await c.from('ft_accounts').insert({id:accId,user_id:CU.id,number:accNum,type,balance:bal,color:a.color});
+    if(bal>0)await c.from('ft_ledger').insert({id:'l_'+uid(),account_id:accId,type:'CREDIT',amount:bal,balance_after:bal,description:'Initial balance',ref:'REF'+uid().toUpperCase(),performed_by:CU.id});
+  }catch(e){console.warn('SB createAccount',e);}
   const accs=DB.accounts;accs.push(a);DB.setAccounts(accs);
-  if(bal>0)appendLedger(a.id,'CREDIT',bal,bal,'Initial balance','system');
-  addAudit(CU.id,'OPEN_ACCOUNT',type+': '+a.number,'SUCCESS');
-  showMsg('acc-msg',t('msg_acc_opened')+a.number,'ok');
-  toast(t('toast_account_opened')+a.number,'ok');
+  appendLedger(accId,'CREDIT',bal,bal,'Initial balance',CU.id);
+  addAudit(CU.id,'OPEN_ACCOUNT',type+': '+accNum,'SUCCESS');
+  showMsg('acc-msg',t('msg_acc_opened')+accNum,'ok');
+  toast(t('toast_account_opened')+accNum,'ok');
   loadAccounts();loadDashboard();
 }
 
 /* ═══ LEDGER ═══ */
 function appendLedger(accId,type,amount,balAfter,desc,by,ref){
   const l=DB.ledger;l.push({id:'l_'+uid(),accountId:accId,type,amount,balanceAfter:balAfter,desc,ref:ref||'REF'+uid().toUpperCase(),performedBy:by,createdAt:nowISO()});DB.setLedger(l);
+  /* async persist */
+  sb().then(c=>c.from('ft_ledger').insert({id:'l_'+uid(),account_id:accId,type,amount,balance_after:balAfter,description:desc,ref:ref||'REF'+uid().toUpperCase(),performed_by:by})).catch(()=>{});
 }
-function addAudit(uid2,action,detail,outcome){const a=DB.audit;a.push({id:'a_'+uid(),userId:uid2,action,detail,outcome,createdAt:nowISO()});DB.setAudit(a);}
+function addAudit(uid2,action,detail,outcome){
+  const a=DB.audit;a.push({id:'a_'+uid(),userId:uid2,action,detail,outcome,createdAt:nowISO()});DB.setAudit(a);
+  sb().then(c=>c.from('ft_audit').insert({id:'a_'+uid(),user_id:uid2,action,detail,outcome})).catch(()=>{});
+}
 
 /* ═══ DASHBOARD ═══ */
 function loadDashboard(){
@@ -1847,21 +2032,283 @@ function showMsg(id,msg,type){const el=document.getElementById(id);if(!el)return
 function toast(msg,type='ok'){const icons={ok:'✓',err:'✕',info:'ℹ'};const el=document.createElement('div');el.className='toast toast-'+type;el.innerHTML='<span>'+icons[type]+'</span>'+msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),4000);}
 
 
+
+/* ═══ ADMIN — PENDING APPROVALS ═══ */
+const API = window._API || 'http://localhost:8000';
+
+function _tok(){ return localStorage.getItem('neobank_token') || ''; }
+function _hdrs(){ return { 'Content-Type':'application/json', 'Authorization':'Bearer '+_tok() }; }
+
+async function renderApprovals(){
+  const tb = document.getElementById('approvals-tb');
+  const statsEl = document.getElementById('approvals-stats');
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">Loading…</td></tr>';
+  try {
+    const r = await fetch(API+'/admin/transactions/all', {headers: _hdrs()});
+    const rows = await r.json();
+    const pending = rows.filter(x=>x.status==='PENDING');
+    // stats
+    if(statsEl){
+      statsEl.innerHTML = [
+        {ico:'⏳',lbl:'Pending',val:pending.length,color:'#dc2626'},
+        {ico:'✅',lbl:'Executed',val:rows.filter(x=>x.status==='EXECUTED').length,color:'#059669'},
+        {ico:'❌',lbl:'Rejected',val:rows.filter(x=>x.status==='REJECTED').length,color:'#6b7280'}
+      ].map(s=>`<div style="background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px;display:flex;gap:12px;align-items:center">
+        <span style="font-size:1.5rem">${s.ico}</span>
+        <div><div style="font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">${s.lbl}</div>
+        <div style="font-size:1.4rem;font-weight:700;color:${s.color}">${s.val}</div></div></div>`).join('');
+    }
+    const badge = document.getElementById('sb-badge');
+    if(badge) badge.textContent = pending.length > 0 ? pending.length : '';
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">No transaction requests found.</td></tr>'; return; }
+    tb.innerHTML = rows.map(r=>{
+      const isPending = r.status === 'PENDING';
+      const statusBadge = {PENDING:'b-a',EXECUTED:'b-g',REJECTED:'b-r',EXPIRED:'b-r',UNDER_REVIEW:'b-b'}[r.status]||'b-b';
+      const risk = r.risk_score || 0;
+      const riskColor = risk>70?'#dc2626':risk>40?'#f59e0b':'#059669';
+      return `<tr>
+        <td class="mono" style="font-size:.68rem">${r.id}</td>
+        <td class="mono" style="font-size:.72rem">${r.initiated_by}</td>
+        <td class="mono" style="font-size:.72rem">${r.from_account_id||'—'}</td>
+        <td class="mono" style="font-size:.72rem">${r.to_account_id||'—'}</td>
+        <td style="font-weight:700;color:#34d399">${parseFloat(r.amount).toLocaleString('tr-TR',{style:'currency',currency:'TRY'})}</td>
+        <td><span style="font-weight:700;color:${riskColor}">${risk}/100</span>${(r.risk_flags||[]).map(f=>`<br><span style="font-size:.6rem;opacity:.7">${f}</span>`).join('')}</td>
+        <td style="font-size:.78rem;color:var(--text2)">${r.description||'—'}</td>
+        <td class="mono" style="font-size:.68rem">${new Date(r.created_at).toLocaleString()}</td>
+        <td>${isPending?`
+          <div style="display:flex;gap:6px">
+            <button onclick="approveRequest('${r.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#059669;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">✅ Approve</button>
+            <button onclick="rejectRequest('${r.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#dc2626;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">❌ Reject</button>
+          </div>
+        `:`<span class="bdg ${statusBadge}">${r.status}</span>`}</td>
+      </tr>`;
+    }).join('');
+  } catch(e){ tb.innerHTML=`<tr><td colspan="9" style="color:var(--red2);padding:16px">Error: ${e.message}</td></tr>`; }
+}
+
+async function approveRequest(id){
+  const note = prompt('Approval note (optional):') || '';
+  try {
+    const r = await fetch(`${API}/admin/transactions/${id}/approve`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    const d = await r.json();
+    if(r.ok){ toast('✅ Transaction approved & executed!','ok'); renderApprovals(); }
+    else toast('Error: '+JSON.stringify(d),'err');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+async function rejectRequest(id){
+  const note = prompt('Rejection reason:') || '';
+  try {
+    const r = await fetch(`${API}/admin/transactions/${id}/reject`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    const d = await r.json();
+    if(r.ok){ toast('❌ Transaction rejected.','info'); renderApprovals(); }
+    else toast('Error: '+JSON.stringify(d),'err');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+/* ═══ ADMIN — LOANS ═══ */
+async function renderAdminLoans(){
+  const tb = document.getElementById('admin-loans-tb');
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">Loading…</td></tr>';
+  try {
+    const r = await fetch(API+'/admin/loans', {headers:_hdrs()});
+    const rows = await r.json();
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">No loan applications found.</td></tr>'; return; }
+    tb.innerHTML = rows.map(l=>{
+      const isPending = ['PENDING','UNDER_REVIEW'].includes(l.status);
+      const statusBadge = {PENDING:'b-a',ACTIVE:'b-g',APPROVED:'b-g',REJECTED:'b-r',CLOSED:'b-b'}[l.status]||'b-b';
+      return `<tr>
+        <td class="mono" style="font-size:.68rem">${l.id}</td>
+        <td class="mono" style="font-size:.72rem">${l.user_id}</td>
+        <td><span class="bdg b-b">${l.loan_type}</span></td>
+        <td style="font-weight:700">${parseFloat(l.principal_amount).toLocaleString('tr-TR',{style:'currency',currency:'TRY'})}</td>
+        <td class="mono">${(parseFloat(l.interest_rate)*100).toFixed(2)}%</td>
+        <td>${l.term_months} mo</td>
+        <td class="mono">${parseFloat(l.monthly_payment).toLocaleString('tr-TR',{style:'currency',currency:'TRY'})}</td>
+        <td><span class="bdg ${statusBadge}">${l.status}</span></td>
+        <td>${isPending?`
+          <div style="display:flex;gap:6px">
+            <button onclick="approveLoan('${l.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#059669;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">✅ Approve</button>
+            <button onclick="rejectLoan('${l.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#dc2626;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">❌ Reject</button>
+          </div>
+        `:'—'}</td>
+      </tr>`;
+    }).join('');
+  } catch(e){ tb.innerHTML=`<tr><td colspan="9" style="color:var(--red2);padding:16px">Error: ${e.message}</td></tr>`; }
+}
+
+async function approveLoan(id){
+  const note = prompt('Approval note:') || '';
+  try {
+    const r = await fetch(`${API}/admin/loans/${id}/approve`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    if(r.ok){ toast('✅ Loan approved & funds disbursed!','ok'); renderAdminLoans(); }
+    else toast('Error approving loan','err');
+  } catch(e){ toast(e.message,'err'); }
+}
+
+async function rejectLoan(id){
+  const note = prompt('Rejection reason:') || '';
+  try {
+    const r = await fetch(`${API}/admin/loans/${id}/reject`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    if(r.ok){ toast('❌ Loan rejected.','info'); renderAdminLoans(); }
+    else toast('Error rejecting loan','err');
+  } catch(e){ toast(e.message,'err'); }
+}
+
+/* ═══ ADMIN — KYC ═══ */
+async function renderAdminKyc(){
+  const tb = document.getElementById('admin-kyc-tb');
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">Loading…</td></tr>';
+  try {
+    const r = await fetch(API+'/kyc', {headers:_hdrs()});
+    const rows = await r.json();
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No KYC submissions found.</td></tr>'; return; }
+    tb.innerHTML = rows.map(k=>{
+      const isPending = k.status === 'PENDING';
+      const statusBadge = {PENDING:'b-a',APPROVED:'b-g',REJECTED:'b-r',UNDER_REVIEW:'b-b'}[k.status]||'b-b';
+      return `<tr>
+        <td class="mono" style="font-size:.68rem">${k.id}</td>
+        <td class="mono" style="font-size:.72rem">${k.user_id}</td>
+        <td><span class="bdg b-b">${k.document_type}</span></td>
+        <td style="font-size:.78rem;color:var(--text2)">${k.file_name||'—'}</td>
+        <td><span class="bdg ${statusBadge}">${k.status}</span></td>
+        <td class="mono" style="font-size:.68rem">${new Date(k.submitted_at).toLocaleString()}</td>
+        <td>${isPending?`
+          <div style="display:flex;gap:6px">
+            <button onclick="approveKyc('${k.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#059669;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">✅ Approve</button>
+            <button onclick="rejectKyc('${k.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#dc2626;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">❌ Reject</button>
+          </div>
+        `:'—'}</td>
+      </tr>`;
+    }).join('');
+  } catch(e){ tb.innerHTML=`<tr><td colspan="7" style="color:var(--red2);padding:16px">Error: ${e.message}</td></tr>`; }
+}
+
+async function approveKyc(id){
+  const note = prompt('Approval note:') || '';
+  try {
+    const r = await fetch(`${API}/admin/kyc/${id}/approve`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    if(r.ok){ toast('✅ KYC document approved!','ok'); renderAdminKyc(); }
+    else toast('Error approving KYC','err');
+  } catch(e){ toast(e.message,'err'); }
+}
+
+async function rejectKyc(id){
+  const note = prompt('Rejection reason:') || '';
+  try {
+    const r = await fetch(`${API}/admin/kyc/${id}/reject`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    if(r.ok){ toast('❌ KYC rejected.','info'); renderAdminKyc(); }
+    else toast('Error rejecting KYC','err');
+  } catch(e){ toast(e.message,'err'); }
+}
+
+/* Auto-load admin pages when navigated to */
+const _origGoPage = window.goPage;
+if(typeof goPage === 'function'){
+  const _orig = goPage;
+  window.goPage = function(pg){
+    _orig(pg);
+    if(pg==='approvals') renderApprovals();
+    else if(pg==='admin-loans') renderAdminLoans();
+    else if(pg==='admin-kyc') renderAdminKyc();
+  };
+}
+
 /* ═══ INIT ═══ */
 applyTranslations();
 </script>
-</body>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-  // Paste your two secret codes inside the quote marks below:
-  const myUrl = https://llchohlypyizjrzuypxr.supabase.co;
-  const myKey = sb_publishable_ltMB9hG2oen-vWIEDi9TTQ_qoUvm5Rx;
+const SECURITY_QUESTIONS = {
+  1: "What was the name of your first pet?",
+  2: "In what city were you born?",
+  3: "What is your mother's maiden name?",
+  4: "What high school did you attend?"
+};
+let currentForgotQuestionId = null;
 
-  // This turns the walkie-talkie on
-  const supabase = window.supabase.createClient(myUrl, myKey);
+async function setupSecurityQuestion() {
+  const qId = document.getElementById("sq-id").value;
+  const ans = document.getElementById("sq-ans").value;
+  let msgEl = document.getElementById("sq-msg");
+  if(!ans) {
+    msgEl.className = "mb err"; msgEl.innerText = "Please enter an answer"; msgEl.style.display = "block"; return;
+  }
+  try {
+    const res = await fetch("/api/auth/security-questions", {
+      method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer "+localStorage.getItem("ft_token") },
+      body: JSON.stringify({ answers: [{ question_id: parseInt(qId), answer: ans }] })
+    });
+    if(res.ok) {
+      msgEl.className = "mb ok"; msgEl.innerText = "Security question saved successfully"; msgEl.style.display = "block";
+      document.getElementById("sq-ans").value = "";
+    } else {
+      let err = await res.json();
+      msgEl.className = "mb err"; msgEl.innerText = err.detail || "Error saving question"; msgEl.style.display = "block";
+    }
+  } catch(e) { msgEl.className = "mb err"; msgEl.innerText = "Network error"; msgEl.style.display = "block"; }
+}
 
-  // This will pop up a message on your screen to prove it worked!
-  alert("My website is connected to Supabase!");
+async function fetchSecurityQuestion() {
+  const email = document.getElementById("f-email").value;
+  if(!email) return alert("Enter email first");
+  try {
+    const res = await fetch(`/api/auth/security-questions/challenge?email=${encodeURIComponent(email)}`);
+    if(res.ok) {
+      const data = await res.json();
+      currentForgotQuestionId = data.question_ids[0];
+      document.getElementById("f-question-text").innerText = SECURITY_QUESTIONS[currentForgotQuestionId] || "Security Question";
+      document.getElementById("forgot-step-1").style.display = "none";
+      document.getElementById("forgot-step-2").style.display = "block";
+      document.getElementById("g-err").style.display = "none";
+    } else {
+      let alertMsg = document.getElementById("g-err");
+      document.getElementById("g-err-msg").innerText = "No security questions found for this email.";
+      alertMsg.style.display = "flex";
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function submitSecurityAnswer() {
+  const email = document.getElementById("f-email").value;
+  const answer = document.getElementById("f-answer").value;
+  const newPass = document.getElementById("f-new-pass").value;
+  if(!answer || newPass.length < 6) return alert("Answer required and password must be at least 6 characters.");
+  try {
+    const res = await fetch("/api/auth/recover-password", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, question_id: currentForgotQuestionId, answer: answer, new_password: newPass })
+    });
+    if(res.ok) {
+      alert("Password reset successfully! You can now log in.");
+      switchTab("login");
+    } else {
+      let err = await res.json();
+      alert("Error: " + (err.detail || "Incorrect answer"));
+    }
+  } catch(e) { console.error(e); }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const ftOriginalSwitchTab = window.switchTab;
+    window.switchTab = function(tab) {
+      if (tab === 'forgot') {
+        document.getElementById("panel-login").style.display = "none";
+        document.getElementById("panel-register").style.display = "none";
+        if(document.getElementById("panel-forgot")) document.getElementById("panel-forgot").style.display = "block";
+        document.getElementById("tab-login-btn").classList.remove("on");
+        document.getElementById("tab-reg-btn").classList.remove("on");
+        document.getElementById("g-err").style.display = "none";
+        if(document.getElementById("forgot-step-1")) document.getElementById("forgot-step-1").style.display = "block";
+        if(document.getElementById("forgot-step-2")) document.getElementById("forgot-step-2").style.display = "none";
+      } else {
+        if(document.getElementById("panel-forgot")) document.getElementById("panel-forgot").style.display = "none";
+        if(ftOriginalSwitchTab) ftOriginalSwitchTab(tab);
+      }
+    }
+});
 </script>
+</body>
 </html>
