@@ -53,12 +53,15 @@ create table if not exists public.ft_users (
 
 alter table public.ft_users enable row level security;
 
+drop policy if exists "users_insert" on public.ft_users;
 create policy "users_insert" on public.ft_users
   for insert with check (true);
 
+drop policy if exists "users_select_own" on public.ft_users;
 create policy "users_select_own" on public.ft_users
   for select using (true);
 
+drop policy if exists "users_update_own" on public.ft_users;
 create policy "users_update_own" on public.ft_users
   for update using (true);
 
@@ -91,6 +94,7 @@ create table if not exists public.ft_accounts (
 
 alter table public.ft_accounts enable row level security;
 
+drop policy if exists "accounts_all" on public.ft_accounts;
 create policy "accounts_all" on public.ft_accounts
   for all using (true) with check (true);
 
@@ -125,6 +129,7 @@ create table if not exists public.ft_ledger (
 
 alter table public.ft_ledger enable row level security;
 
+drop policy if exists "ledger_all" on public.ft_ledger;
 create policy "ledger_all" on public.ft_ledger
   for all using (true) with check (true);
 
@@ -152,6 +157,7 @@ create table if not exists public.ft_audit (
 
 alter table public.ft_audit enable row level security;
 
+drop policy if exists "audit_all" on public.ft_audit;
 create policy "audit_all" on public.ft_audit
   for all using (true) with check (true);
 
@@ -191,6 +197,7 @@ create table if not exists public.ft_cards (
 
 alter table public.ft_cards enable row level security;
 
+drop policy if exists "cards_all" on public.ft_cards;
 create policy "cards_all" on public.ft_cards
   for all using (true) with check (true);
 
@@ -231,6 +238,7 @@ create table if not exists public.ft_loans (
 
 alter table public.ft_loans enable row level security;
 
+drop policy if exists "loans_all" on public.ft_loans;
 create policy "loans_all" on public.ft_loans
   for all using (true) with check (true);
 
@@ -260,6 +268,7 @@ create table if not exists public.ft_loan_payments (
 
 alter table public.ft_loan_payments enable row level security;
 
+drop policy if exists "loan_payments_all" on public.ft_loan_payments;
 create policy "loan_payments_all" on public.ft_loan_payments
   for all using (true) with check (true);
 
@@ -287,6 +296,7 @@ create table if not exists public.ft_beneficiaries (
 
 alter table public.ft_beneficiaries enable row level security;
 
+drop policy if exists "beneficiaries_all" on public.ft_beneficiaries;
 create policy "beneficiaries_all" on public.ft_beneficiaries
   for all using (true) with check (true);
 
@@ -315,6 +325,7 @@ create table if not exists public.ft_notifications (
 
 alter table public.ft_notifications enable row level security;
 
+drop policy if exists "notifications_all" on public.ft_notifications;
 create policy "notifications_all" on public.ft_notifications
   for all using (true) with check (true);
 
@@ -348,6 +359,7 @@ create table if not exists public.ft_kyc_documents (
 
 alter table public.ft_kyc_documents enable row level security;
 
+drop policy if exists "kyc_all" on public.ft_kyc_documents;
 create policy "kyc_all" on public.ft_kyc_documents
   for all using (true) with check (true);
 
@@ -384,6 +396,7 @@ create table if not exists public.ft_transaction_requests (
 
 alter table public.ft_transaction_requests enable row level security;
 
+drop policy if exists "transaction_requests_all" on public.ft_transaction_requests;
 create policy "transaction_requests_all" on public.ft_transaction_requests
   for all using (true) with check (true);
 
@@ -419,9 +432,11 @@ create table if not exists public.ft_exchange_rates (
 
 alter table public.ft_exchange_rates enable row level security;
 
+drop policy if exists "exchange_rates_select" on public.ft_exchange_rates;
 create policy "exchange_rates_select" on public.ft_exchange_rates
   for select using (true);
 
+drop policy if exists "exchange_rates_insert_admin" on public.ft_exchange_rates;
 create policy "exchange_rates_insert_admin" on public.ft_exchange_rates
   for insert with check (true);
 
@@ -456,6 +471,7 @@ create table if not exists public.ft_support_tickets (
 
 alter table public.ft_support_tickets enable row level security;
 
+drop policy if exists "support_tickets_all" on public.ft_support_tickets;
 create policy "support_tickets_all" on public.ft_support_tickets
   for all using (true) with check (true);
 
