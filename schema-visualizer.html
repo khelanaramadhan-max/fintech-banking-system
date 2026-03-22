@@ -1,490 +1,814 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NeoBank — Schema Visualizer</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#0d0f17;--surface:#161924;--surface2:#1e2235;--border:#2a2f4a;
-    --text:#e8ecf5;--text2:#8892b0;--accent:#6c63ff;--accent2:#00d4aa;
-    --danger:#ff6b6b;--warn:#ffd93d;--info:#74b9ff;
-    --green:#00d4aa;--purple:#6c63ff;--blue:#74b9ff;--orange:#ff9f43;
-  }
-  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow:hidden;height:100vh}
-  header{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--border);
-    position:relative;z-index:100;
-  }
-  .logo{display:flex;align-items:center;gap:10px}
-  .logo svg{width:32px;height:32px}
-  .logo-text{font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .logo-sub{font-size:12px;color:var(--text2);font-weight:400}
-  .controls{display:flex;gap:8px;align-items:center}
-  .btn{
-    padding:6px 14px;border-radius:8px;border:1px solid var(--border);
-    background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer;
-    transition:all .2s;font-family:'Inter',sans-serif;
-  }
-  .btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
-  .btn.active{background:var(--accent);border-color:var(--accent)}
-  .legend{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--text2)}
-  .legend-item{display:flex;align-items:center;gap:5px}
-  .legend-dot{width:10px;height:10px;border-radius:3px}
-  #stats{display:flex;gap:16px;font-size:12px}
-  .stat{color:var(--text2)}
-  .stat b{color:var(--text)}
-  #canvas-wrap{position:relative;width:100%;height:calc(100vh - 57px);overflow:hidden;cursor:grab}
-  #canvas-wrap.dragging{cursor:grabbing}
-  #canvas{position:absolute;transform-origin:0 0}
-  .table-node{
-    position:absolute;min-width:240px;border-radius:12px;
-    border:1px solid var(--border);background:var(--surface);
-    box-shadow:0 4px 24px rgba(0,0,0,.4);transition:box-shadow .2s,border-color .2s;
-    user-select:none;cursor:move;
-  }
-  .table-node:hover{border-color:var(--accent);box-shadow:0 8px 32px rgba(108,99,255,.2)}
-  .table-node.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(108,99,255,.3)}
-  .table-head{
-    display:flex;align-items:center;gap:8px;padding:10px 14px;
-    border-radius:11px 11px 0 0;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);
-  }
-  .table-icon{font-size:16px}
-  .row-count{margin-left:auto;font-size:10px;opacity:.7;font-weight:400;font-family:'JetBrains Mono',monospace}
-  .table-cols{padding:6px 0}
-  .col-row{
-    display:flex;align-items:center;gap:8px;padding:4px 14px;
-    font-size:11.5px;color:var(--text2);transition:background .15s;
-  }
-  .col-row:hover{background:var(--surface2)}
-  .col-name{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;min-width:110px}
-  .col-type{font-size:10px;opacity:.65;font-family:'JetBrains Mono',monospace}
-  .col-badge{
-    margin-left:auto;font-size:9px;padding:1px 5px;border-radius:3px;
-    font-weight:600;letter-spacing:.5px;text-transform:uppercase;
-  }
-  .pk{background:rgba(255,211,61,.15);color:var(--warn);border:1px solid rgba(255,211,61,.3)}
-  .fk{background:rgba(116,185,255,.15);color:var(--blue);border:1px solid rgba(116,185,255,.3)}
-  .uq{background:rgba(0,212,170,.15);color:var(--green);border:1px solid rgba(0,212,170,.3)}
-  .nn{background:rgba(108,99,255,.1);color:var(--accent);border:1px solid rgba(108,99,255,.2)}
-  svg#svg-lines{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
-  .fk-line{stroke:var(--accent);stroke-width:1.5;fill:none;opacity:.5;stroke-dasharray:5 4}
-  .fk-line:hover{opacity:1}
-  .arrow-head{fill:var(--accent)}
-  #tooltip{
-    position:fixed;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);
-    border-radius:8px;font-size:12px;pointer-events:none;display:none;z-index:999;
-    box-shadow:0 4px 12px rgba(0,0,0,.5);line-height:1.6;
-  }
-  #minimap{
-    position:fixed;bottom:20px;right:20px;width:200px;height:140px;
-    background:var(--surface);border:1px solid var(--border);border-radius:10px;
-    overflow:hidden;z-index:200;
-  }
-  #minimap canvas{width:100%;height:100%}
-  .zoom-controls{
-    position:fixed;bottom:20px;left:20px;display:flex;flex-direction:column;gap:4px;z-index:200;
-  }
-  .zoom-btn{
-    width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
-    background:var(--surface);color:var(--text);font-size:18px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;transition:all .2s;
-  }
-  .zoom-btn:hover{background:var(--accent);border-color:var(--accent)}
-  #zoom-label{
-    width:36px;height:28px;border-radius:8px;border:1px solid var(--border);
-    background:var(--surface);color:var(--text2);font-size:11px;
-    display:flex;align-items:center;justify-content:center;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeoBank — Schema Visualizer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #0d0f17;
+      --surface: #161924;
+      --surface2: #1e2235;
+      --border: #2a2f4a;
+      --text: #e8ecf5;
+      --text2: #8892b0;
+      --accent: #6c63ff;
+      --accent2: #00d4aa;
+      --danger: #ff6b6b;
+      --warn: #ffd93d;
+      --info: #74b9ff;
+      --green: #00d4aa;
+      --purple: #6c63ff;
+      --blue: #74b9ff;
+      --orange: #ff9f43;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      height: 100vh
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .logo svg {
+      width: 32px;
+      height: 32px
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .logo-sub {
+      font-size: 12px;
+      color: var(--text2);
+      font-weight: 400
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    .btn.active {
+      background: var(--accent);
+      border-color: var(--accent)
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text2)
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px
+    }
+
+    #stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px
+    }
+
+    .stat {
+      color: var(--text2)
+    }
+
+    .stat b {
+      color: var(--text)
+    }
+
+    #canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 57px);
+      overflow: hidden;
+      cursor: grab
+    }
+
+    #canvas-wrap.dragging {
+      cursor: grabbing
+    }
+
+    #canvas {
+      position: absolute;
+      transform-origin: 0 0
+    }
+
+    .table-node {
+      position: absolute;
+      min-width: 240px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4);
+      transition: box-shadow .2s, border-color .2s;
+      user-select: none;
+      cursor: move;
+    }
+
+    .table-node:hover {
+      border-color: var(--accent);
+      box-shadow: 0 8px 32px rgba(108, 99, 255, .2)
+    }
+
+    .table-node.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(108, 99, 255, .3)
+    }
+
+    .table-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 11px 11px 0 0;
+      font-size: 13px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-icon {
+      font-size: 16px
+    }
+
+    .row-count {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: .7;
+      font-weight: 400;
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    .table-cols {
+      padding: 6px 0
+    }
+
+    .col-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      font-size: 11.5px;
+      color: var(--text2);
+      transition: background .15s;
+    }
+
+    .col-row:hover {
+      background: var(--surface2)
+    }
+
+    .col-name {
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      min-width: 110px
+    }
+
+    .col-type {
+      font-size: 10px;
+      opacity: .65;
+      font-family: 'JetBrains Mono', monospace
+    }
+
+    .col-badge {
+      margin-left: auto;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .pk {
+      background: rgba(255, 211, 61, .15);
+      color: var(--warn);
+      border: 1px solid rgba(255, 211, 61, .3)
+    }
+
+    .fk {
+      background: rgba(116, 185, 255, .15);
+      color: var(--blue);
+      border: 1px solid rgba(116, 185, 255, .3)
+    }
+
+    .uq {
+      background: rgba(0, 212, 170, .15);
+      color: var(--green);
+      border: 1px solid rgba(0, 212, 170, .3)
+    }
+
+    .nn {
+      background: rgba(108, 99, 255, .1);
+      color: var(--accent);
+      border: 1px solid rgba(108, 99, 255, .2)
+    }
+
+    svg#svg-lines {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      overflow: visible
+    }
+
+    .fk-line {
+      stroke: var(--accent);
+      stroke-width: 1.5;
+      fill: none;
+      opacity: .5;
+      stroke-dasharray: 5 4
+    }
+
+    .fk-line:hover {
+      opacity: 1
+    }
+
+    .arrow-head {
+      fill: var(--accent)
+    }
+
+    #tooltip {
+      position: fixed;
+      padding: 8px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      pointer-events: none;
+      display: none;
+      z-index: 999;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .5);
+      line-height: 1.6;
+    }
+
+    #minimap {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 200px;
+      height: 140px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      z-index: 200;
+    }
+
+    #minimap canvas {
+      width: 100%;
+      height: 100%
+    }
+
+    .zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 200;
+    }
+
+    .zoom-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+
+    .zoom-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent)
+    }
+
+    #zoom-label {
+      width: 36px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text2);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
 </head>
+
 <body>
-<header>
-  <div class="logo">
-    <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#6c63ff22"/><path d="M8 16h16M16 8v16" stroke="#6c63ff" stroke-width="2.5" stroke-linecap="round"/><circle cx="16" cy="16" r="5" stroke="#00d4aa" stroke-width="2"/></svg>
-    <div><div class="logo-text">NeoBank Schema</div><div class="logo-sub">Interactive Database Visualizer</div></div>
-  </div>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:#6c63ff"></div>Auth/Core</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#00d4aa"></div>Finance</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#74b9ff"></div>Operations</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#ff9f43"></div>Support</div>
-    <div class="legend-item" style="margin-left:8px">
-      <svg width="30" height="10"><line x1="0" y1="5" x2="30" y2="5" stroke="#6c63ff" stroke-width="1.5" stroke-dasharray="5 4"/></svg> FK Relation
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="8" fill="#6c63ff22" />
+        <path d="M8 16h16M16 8v16" stroke="#6c63ff" stroke-width="2.5" stroke-linecap="round" />
+        <circle cx="16" cy="16" r="5" stroke="#00d4aa" stroke-width="2" />
+      </svg>
+      <div>
+        <div class="logo-text">NeoBank Schema</div>
+        <div class="logo-sub">Interactive Database Visualizer</div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#6c63ff"></div>Auth/Core
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#00d4aa"></div>Finance
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#74b9ff"></div>Operations
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#ff9f43"></div>Support
+      </div>
+      <div class="legend-item" style="margin-left:8px">
+        <svg width="30" height="10">
+          <line x1="0" y1="5" x2="30" y2="5" stroke="#6c63ff" stroke-width="1.5" stroke-dasharray="5 4" />
+        </svg> FK Relation
+      </div>
+    </div>
+    <div class="controls">
+      <div id="stats">
+        <div class="stat"><b id="s-tables">14</b> tables</div>
+        <div class="stat"><b id="s-cols">0</b> columns</div>
+        <div class="stat"><b id="s-fks">0</b> FK links</div>
+      </div>
+      <button class="btn" onclick="fitAll()">⊡ Fit All</button>
+      <button class="btn" onclick="resetLayout()">↺ Reset</button>
+    </div>
+  </header>
+
+  <div id="canvas-wrap">
+    <div id="canvas">
+      <svg id="svg-lines">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" class="arrow-head" />
+          </marker>
+        </defs>
+      </svg>
     </div>
   </div>
-  <div class="controls">
-    <div id="stats"><div class="stat"><b id="s-tables">14</b> tables</div><div class="stat"><b id="s-cols">0</b> columns</div><div class="stat"><b id="s-fks">0</b> FK links</div></div>
-    <button class="btn" onclick="fitAll()">⊡ Fit All</button>
-    <button class="btn" onclick="resetLayout()">↺ Reset</button>
+
+  <div id="tooltip"></div>
+  <div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoom(1.2)" title="Zoom In">+</button>
+    <div id="zoom-label">100%</div>
+    <button class="zoom-btn" onclick="zoom(0.83)" title="Zoom Out">−</button>
+    <button class="zoom-btn" onclick="fitAll()" title="Fit All" style="font-size:14px">⊡</button>
   </div>
-</header>
+  <div id="minimap"><canvas id="mm-canvas" width="200" height="140"></canvas></div>
 
-<div id="canvas-wrap">
-  <div id="canvas">
-    <svg id="svg-lines"><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" class="arrow-head"/></marker></defs></svg>
-  </div>
-</div>
+  <script>
+    const SCHEMA = [
+      {
+        id: "ft_users", label: "ft_users", icon: "👤", category: "auth",
+        desc: "Core user identity & auth. Supports admin, customer, compliance roles.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "name", t: "text", nn: true }, { n: "email", t: "text", uq: true, nn: true },
+          { n: "password", t: "text", nn: true }, { n: "tcno", t: "text", uq: true }, { n: "phone", t: "text" },
+          { n: "address", t: "text" }, { n: "city", t: "text" }, { n: "country", t: "text" }, { n: "currency", t: "text" },
+          { n: "role", t: "text", nn: true }, { n: "status", t: "text", nn: true }, { n: "kyc_status", t: "text", nn: true },
+          { n: "last_login_at", t: "timestamptz" }, { n: "failed_logins", t: "int" },
+          { n: "created_at", t: "timestamptz", nn: true }, { n: "updated_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_accounts", label: "ft_accounts", icon: "🏦", category: "finance",
+        desc: "Bank accounts owned by users. Balance, type, currency, status.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "user_id", t: "text", fk: "ft_users", nn: true },
+          { n: "number", t: "text", uq: true, nn: true }, { n: "iban", t: "text", uq: true }, { n: "type", t: "text", nn: true },
+          { n: "currency", t: "text", nn: true }, { n: "balance", t: "numeric(18,2)", nn: true },
+          { n: "credit_limit", t: "numeric(18,2)" }, { n: "status", t: "text", nn: true }, { n: "color", t: "text" },
+          { n: "interest_rate", t: "numeric(5,4)" }, { n: "created_at", t: "timestamptz", nn: true }, { n: "updated_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_ledger", label: "ft_ledger", icon: "📒", category: "finance",
+        desc: "Double-entry bookkeeping. Every monetary movement creates an entry.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "account_id", t: "text", fk: "ft_accounts", nn: true },
+          { n: "tx_request_id", t: "text", fk: "ft_transaction_requests" }, { n: "type", t: "text", nn: true },
+          { n: "amount", t: "numeric(18,2)", nn: true }, { n: "balance_after", t: "numeric(18,2)", nn: true },
+          { n: "currency", t: "text", nn: true }, { n: "description", t: "text" }, { n: "category", t: "text" },
+          { n: "ref", t: "text" }, { n: "performed_by", t: "text", fk: "ft_users" }, { n: "channel", t: "text" },
+          { n: "ip_address", t: "text" }, { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_audit", label: "ft_audit", icon: "🔍", category: "ops",
+        desc: "Immutable audit trail. Every system action is logged here.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "user_id", t: "text", fk: "ft_users" }, { n: "action", t: "text", nn: true },
+          { n: "entity_type", t: "text" }, { n: "entity_id", t: "text" }, { n: "detail", t: "text" },
+          { n: "outcome", t: "text" }, { n: "ip_address", t: "text" }, { n: "user_agent", t: "text" },
+          { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_cards", label: "ft_cards", icon: "💳", category: "finance",
+        desc: "Debit/credit cards linked to accounts. Lifecycle, limits, network.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "account_id", t: "text", fk: "ft_accounts", nn: true },
+          { n: "user_id", t: "text", fk: "ft_users", nn: true }, { n: "card_type", t: "text", nn: true },
+          { n: "card_number", t: "text", uq: true, nn: true }, { n: "masked_number", t: "text", nn: true },
+          { n: "cardholder_name", t: "text", nn: true }, { n: "expiry_month", t: "int", nn: true },
+          { n: "expiry_year", t: "int", nn: true }, { n: "cvv_hash", t: "text", nn: true },
+          { n: "network", t: "text", nn: true }, { n: "status", t: "text", nn: true },
+          { n: "daily_limit", t: "numeric(12,2)" }, { n: "monthly_limit", t: "numeric(12,2)" },
+          { n: "contactless", t: "boolean" }, { n: "online_payments", t: "boolean" },
+          { n: "issued_at", t: "timestamptz" }, { n: "last_used_at", t: "timestamptz" }, { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_loans", label: "ft_loans", icon: "💰", category: "finance",
+        desc: "Loan applications. Admin approval required before disbursement.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "user_id", t: "text", fk: "ft_users", nn: true },
+          { n: "account_id", t: "text", fk: "ft_accounts", nn: true }, { n: "loan_type", t: "text", nn: true },
+          { n: "principal_amount", t: "numeric(18,2)", nn: true }, { n: "interest_rate", t: "numeric(5,4)", nn: true },
+          { n: "term_months", t: "int", nn: true }, { n: "monthly_payment", t: "numeric(18,2)", nn: true },
+          { n: "total_repayable", t: "numeric(18,2)", nn: true }, { n: "amount_paid", t: "numeric(18,2)" },
+          { n: "outstanding_balance", t: "numeric(18,2)", nn: true }, { n: "status", t: "text", nn: true },
+          { n: "purpose", t: "text" }, { n: "collateral", t: "text" }, { n: "reviewed_by", t: "text", fk: "ft_users" },
+          { n: "review_note", t: "text" }, { n: "disbursed_at", t: "timestamptz" },
+          { n: "next_payment_date", t: "date" }, { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_loan_payments", label: "ft_loan_payments", icon: "📅", category: "finance",
+        desc: "Installment records for active loans. Tracks due dates and late fees.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "loan_id", t: "text", fk: "ft_loans", nn: true },
+          { n: "installment_no", t: "int", nn: true }, { n: "due_date", t: "date", nn: true },
+          { n: "amount_due", t: "numeric(18,2)", nn: true }, { n: "amount_paid", t: "numeric(18,2)" },
+          { n: "late_fee", t: "numeric(18,2)" }, { n: "status", t: "text", nn: true },
+          { n: "paid_at", t: "timestamptz" }, { n: "ledger_ref", t: "text" }, { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_beneficiaries", label: "ft_beneficiaries", icon: "👥", category: "ops",
+        desc: "Saved payees per user. Enables fast recurring transfers.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "user_id", t: "text", fk: "ft_users", nn: true },
+          { n: "name", t: "text", nn: true }, { n: "bank_name", t: "text" }, { n: "account_number", t: "text", nn: true },
+          { n: "iban", t: "text" }, { n: "currency", t: "text" }, { n: "is_internal", t: "boolean" },
+          { n: "is_verified", t: "boolean" }, { n: "nickname", t: "text" }, { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_notifications", label: "ft_notifications", icon: "🔔", category: "ops",
+        desc: "In-app notification feed. Admin can broadcast to all customers.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "user_id", t: "text", fk: "ft_users" },
+          { n: "type", t: "text", nn: true }, { n: "title", t: "text", nn: true }, { n: "body", t: "text", nn: true },
+          { n: "entity_type", t: "text" }, { n: "entity_id", t: "text" }, { n: "is_read", t: "boolean" },
+          { n: "priority", t: "text" }, { n: "expires_at", t: "timestamptz" }, { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_kyc_documents", label: "ft_kyc_documents", icon: "🪪", category: "ops",
+        desc: "KYC document submissions. Admin/compliance reviews and decides.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "user_id", t: "text", fk: "ft_users", nn: true },
+          { n: "document_type", t: "text", nn: true }, { n: "file_url", t: "text" }, { n: "file_name", t: "text" },
+          { n: "file_size", t: "int" }, { n: "mime_type", t: "text" }, { n: "status", t: "text", nn: true },
+          { n: "reviewed_by", t: "text", fk: "ft_users" }, { n: "review_note", t: "text" },
+          { n: "expires_at", t: "date" }, { n: "submitted_at", t: "timestamptz" }, { n: "reviewed_at", t: "timestamptz" }
+        ]
+      },
+      {
+        id: "ft_transaction_requests", label: "ft_transaction_requests", icon: "⏳", category: "ops",
+        desc: "Pending transfers requiring admin approval. Risk-scored and flagged.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "initiated_by", t: "text", fk: "ft_users", nn: true },
+          { n: "from_account_id", t: "text", fk: "ft_accounts" }, { n: "to_account_id", t: "text", fk: "ft_accounts" },
+          { n: "beneficiary_id", t: "text", fk: "ft_beneficiaries" }, { n: "amount", t: "numeric(18,2)", nn: true },
+          { n: "currency", t: "text" }, { n: "request_type", t: "text", nn: true }, { n: "description", t: "text" },
+          { n: "status", t: "text", nn: true }, { n: "risk_score", t: "int" }, { n: "risk_flags", t: "text[]" },
+          { n: "reviewed_by", t: "text", fk: "ft_users" }, { n: "review_note", t: "text" },
+          { n: "reviewed_at", t: "timestamptz" }, { n: "auto_approve", t: "boolean" }, { n: "expires_at", t: "timestamptz" },
+          { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_exchange_rates", label: "ft_exchange_rates", icon: "💱", category: "finance",
+        desc: "Currency exchange rates. Updated from TCMB/ECB feeds.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "base_currency", t: "text", nn: true },
+          { n: "target_currency", t: "text", nn: true }, { n: "rate", t: "numeric(16,6)", nn: true },
+          { n: "bid_rate", t: "numeric(16,6)" }, { n: "ask_rate", t: "numeric(16,6)" },
+          { n: "source", t: "text", nn: true }, { n: "is_active", t: "boolean" }, { n: "valid_from", t: "timestamptz" },
+          { n: "valid_until", t: "timestamptz" }, { n: "created_at", t: "timestamptz", nn: true }
+        ]
+      },
+      {
+        id: "ft_support_tickets", label: "ft_support_tickets", icon: "🎫", category: "support",
+        desc: "Customer support tickets. Admin assigns, resolves, and tracks.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "user_id", t: "text", fk: "ft_users", nn: true },
+          { n: "assigned_to", t: "text", fk: "ft_users" }, { n: "category", t: "text", nn: true },
+          { n: "subject", t: "text", nn: true }, { n: "description", t: "text", nn: true },
+          { n: "status", t: "text", nn: true }, { n: "priority", t: "text", nn: true },
+          { n: "related_account_id", t: "text", fk: "ft_accounts" }, { n: "related_tx_id", t: "text" },
+          { n: "resolution_note", t: "text" }, { n: "created_at", t: "timestamptz", nn: true },
+          { n: "updated_at", t: "timestamptz" }, { n: "resolved_at", t: "timestamptz" }
+        ]
+      },
+      {
+        id: "ft_security_answers", label: "ft_security_answers", icon: "🔐", category: "auth",
+        desc: "Stores hashed answers to security questions for password recovery.",
+        cols: [
+          { n: "id", t: "text", pk: true }, { n: "user_id", t: "text", fk: "ft_users", nn: true },
+          { n: "question_id", t: "int", nn: true }, { n: "answer_hash", t: "text", nn: true },
+          { n: "created_at", t: "timestamptz", nn: true }, { n: "updated_at", t: "timestamptz", nn: true }
+        ]
+      }
+    ];
 
-<div id="tooltip"></div>
-<div class="zoom-controls">
-  <button class="zoom-btn" onclick="zoom(1.2)" title="Zoom In">+</button>
-  <div id="zoom-label">100%</div>
-  <button class="zoom-btn" onclick="zoom(0.83)" title="Zoom Out">−</button>
-  <button class="zoom-btn" onclick="fitAll()" title="Fit All" style="font-size:14px">⊡</button>
-</div>
-<div id="minimap"><canvas id="mm-canvas" width="200" height="140"></canvas></div>
+    const CAT_COLORS = { auth: "#6c63ff", finance: "#00d4aa", ops: "#74b9ff", support: "#ff9f43" };
+    const LAYOUT = [
+      { id: "ft_users", x: 480, y: 40 }, { id: "ft_accounts", x: 860, y: 40 },
+      { id: "ft_ledger", x: 1220, y: 40 }, { id: "ft_security_answers", x: 100, y: 40 },
+      { id: "ft_audit", x: 860, y: 360 }, { id: "ft_cards", x: 1220, y: 360 },
+      { id: "ft_loans", x: 480, y: 360 }, { id: "ft_loan_payments", x: 100, y: 360 },
+      { id: "ft_beneficiaries", x: 100, y: 660 }, { id: "ft_notifications", x: 480, y: 660 },
+      { id: "ft_kyc_documents", x: 860, y: 660 }, { id: "ft_transaction_requests", x: 1220, y: 660 },
+      { id: "ft_exchange_rates", x: 100, y: 980 }, { id: "ft_support_tickets", x: 480, y: 980 },
+    ];
 
-<script>
-const SCHEMA = [
-  { id:"ft_users", label:"ft_users", icon:"👤", category:"auth",
-    desc:"Core user identity & auth. Supports admin, customer, compliance roles.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"name",t:"text",nn:true},{n:"email",t:"text",uq:true,nn:true},
-      {n:"password",t:"text",nn:true},{n:"tcno",t:"text",uq:true},{n:"phone",t:"text"},
-      {n:"address",t:"text"},{n:"city",t:"text"},{n:"country",t:"text"},{n:"currency",t:"text"},
-      {n:"role",t:"text",nn:true},{n:"status",t:"text",nn:true},{n:"kyc_status",t:"text",nn:true},
-      {n:"last_login_at",t:"timestamptz"},{n:"failed_logins",t:"int"},
-      {n:"created_at",t:"timestamptz",nn:true},{n:"updated_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_accounts", label:"ft_accounts", icon:"🏦", category:"finance",
-    desc:"Bank accounts owned by users. Balance, type, currency, status.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users",nn:true},
-      {n:"number",t:"text",uq:true,nn:true},{n:"iban",t:"text",uq:true},{n:"type",t:"text",nn:true},
-      {n:"currency",t:"text",nn:true},{n:"balance",t:"numeric(18,2)",nn:true},
-      {n:"credit_limit",t:"numeric(18,2)"},{n:"status",t:"text",nn:true},{n:"color",t:"text"},
-      {n:"interest_rate",t:"numeric(5,4)"},{n:"created_at",t:"timestamptz",nn:true},{n:"updated_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_ledger", label:"ft_ledger", icon:"📒", category:"finance",
-    desc:"Double-entry bookkeeping. Every monetary movement creates an entry.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"account_id",t:"text",fk:"ft_accounts",nn:true},
-      {n:"tx_request_id",t:"text",fk:"ft_transaction_requests"},{n:"type",t:"text",nn:true},
-      {n:"amount",t:"numeric(18,2)",nn:true},{n:"balance_after",t:"numeric(18,2)",nn:true},
-      {n:"currency",t:"text",nn:true},{n:"description",t:"text"},{n:"category",t:"text"},
-      {n:"ref",t:"text"},{n:"performed_by",t:"text",fk:"ft_users"},{n:"channel",t:"text"},
-      {n:"ip_address",t:"text"},{n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_audit", label:"ft_audit", icon:"🔍", category:"ops",
-    desc:"Immutable audit trail. Every system action is logged here.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users"},{n:"action",t:"text",nn:true},
-      {n:"entity_type",t:"text"},{n:"entity_id",t:"text"},{n:"detail",t:"text"},
-      {n:"outcome",t:"text"},{n:"ip_address",t:"text"},{n:"user_agent",t:"text"},
-      {n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_cards", label:"ft_cards", icon:"💳", category:"finance",
-    desc:"Debit/credit cards linked to accounts. Lifecycle, limits, network.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"account_id",t:"text",fk:"ft_accounts",nn:true},
-      {n:"user_id",t:"text",fk:"ft_users",nn:true},{n:"card_type",t:"text",nn:true},
-      {n:"card_number",t:"text",uq:true,nn:true},{n:"masked_number",t:"text",nn:true},
-      {n:"cardholder_name",t:"text",nn:true},{n:"expiry_month",t:"int",nn:true},
-      {n:"expiry_year",t:"int",nn:true},{n:"cvv_hash",t:"text",nn:true},
-      {n:"network",t:"text",nn:true},{n:"status",t:"text",nn:true},
-      {n:"daily_limit",t:"numeric(12,2)"},{n:"monthly_limit",t:"numeric(12,2)"},
-      {n:"contactless",t:"boolean"},{n:"online_payments",t:"boolean"},
-      {n:"issued_at",t:"timestamptz"},{n:"last_used_at",t:"timestamptz"},{n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_loans", label:"ft_loans", icon:"💰", category:"finance",
-    desc:"Loan applications. Admin approval required before disbursement.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users",nn:true},
-      {n:"account_id",t:"text",fk:"ft_accounts",nn:true},{n:"loan_type",t:"text",nn:true},
-      {n:"principal_amount",t:"numeric(18,2)",nn:true},{n:"interest_rate",t:"numeric(5,4)",nn:true},
-      {n:"term_months",t:"int",nn:true},{n:"monthly_payment",t:"numeric(18,2)",nn:true},
-      {n:"total_repayable",t:"numeric(18,2)",nn:true},{n:"amount_paid",t:"numeric(18,2)"},
-      {n:"outstanding_balance",t:"numeric(18,2)",nn:true},{n:"status",t:"text",nn:true},
-      {n:"purpose",t:"text"},{n:"collateral",t:"text"},{n:"reviewed_by",t:"text",fk:"ft_users"},
-      {n:"review_note",t:"text"},{n:"disbursed_at",t:"timestamptz"},
-      {n:"next_payment_date",t:"date"},{n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_loan_payments", label:"ft_loan_payments", icon:"📅", category:"finance",
-    desc:"Installment records for active loans. Tracks due dates and late fees.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"loan_id",t:"text",fk:"ft_loans",nn:true},
-      {n:"installment_no",t:"int",nn:true},{n:"due_date",t:"date",nn:true},
-      {n:"amount_due",t:"numeric(18,2)",nn:true},{n:"amount_paid",t:"numeric(18,2)"},
-      {n:"late_fee",t:"numeric(18,2)"},{n:"status",t:"text",nn:true},
-      {n:"paid_at",t:"timestamptz"},{n:"ledger_ref",t:"text"},{n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_beneficiaries", label:"ft_beneficiaries", icon:"👥", category:"ops",
-    desc:"Saved payees per user. Enables fast recurring transfers.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users",nn:true},
-      {n:"name",t:"text",nn:true},{n:"bank_name",t:"text"},{n:"account_number",t:"text",nn:true},
-      {n:"iban",t:"text"},{n:"currency",t:"text"},{n:"is_internal",t:"boolean"},
-      {n:"is_verified",t:"boolean"},{n:"nickname",t:"text"},{n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_notifications", label:"ft_notifications", icon:"🔔", category:"ops",
-    desc:"In-app notification feed. Admin can broadcast to all customers.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users"},
-      {n:"type",t:"text",nn:true},{n:"title",t:"text",nn:true},{n:"body",t:"text",nn:true},
-      {n:"entity_type",t:"text"},{n:"entity_id",t:"text"},{n:"is_read",t:"boolean"},
-      {n:"priority",t:"text"},{n:"expires_at",t:"timestamptz"},{n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_kyc_documents", label:"ft_kyc_documents", icon:"🪪", category:"ops",
-    desc:"KYC document submissions. Admin/compliance reviews and decides.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users",nn:true},
-      {n:"document_type",t:"text",nn:true},{n:"file_url",t:"text"},{n:"file_name",t:"text"},
-      {n:"file_size",t:"int"},{n:"mime_type",t:"text"},{n:"status",t:"text",nn:true},
-      {n:"reviewed_by",t:"text",fk:"ft_users"},{n:"review_note",t:"text"},
-      {n:"expires_at",t:"date"},{n:"submitted_at",t:"timestamptz"},{n:"reviewed_at",t:"timestamptz"}
-    ]},
-  { id:"ft_transaction_requests", label:"ft_transaction_requests", icon:"⏳", category:"ops",
-    desc:"Pending transfers requiring admin approval. Risk-scored and flagged.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"initiated_by",t:"text",fk:"ft_users",nn:true},
-      {n:"from_account_id",t:"text",fk:"ft_accounts"},{n:"to_account_id",t:"text",fk:"ft_accounts"},
-      {n:"beneficiary_id",t:"text",fk:"ft_beneficiaries"},{n:"amount",t:"numeric(18,2)",nn:true},
-      {n:"currency",t:"text"},{n:"request_type",t:"text",nn:true},{n:"description",t:"text"},
-      {n:"status",t:"text",nn:true},{n:"risk_score",t:"int"},{n:"risk_flags",t:"text[]"},
-      {n:"reviewed_by",t:"text",fk:"ft_users"},{n:"review_note",t:"text"},
-      {n:"reviewed_at",t:"timestamptz"},{n:"auto_approve",t:"boolean"},{n:"expires_at",t:"timestamptz"},
-      {n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_exchange_rates", label:"ft_exchange_rates", icon:"💱", category:"finance",
-    desc:"Currency exchange rates. Updated from TCMB/ECB feeds.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"base_currency",t:"text",nn:true},
-      {n:"target_currency",t:"text",nn:true},{n:"rate",t:"numeric(16,6)",nn:true},
-      {n:"bid_rate",t:"numeric(16,6)"},{n:"ask_rate",t:"numeric(16,6)"},
-      {n:"source",t:"text",nn:true},{n:"is_active",t:"boolean"},{n:"valid_from",t:"timestamptz"},
-      {n:"valid_until",t:"timestamptz"},{n:"created_at",t:"timestamptz",nn:true}
-    ]},
-  { id:"ft_support_tickets", label:"ft_support_tickets", icon:"🎫", category:"support",
-    desc:"Customer support tickets. Admin assigns, resolves, and tracks.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users",nn:true},
-      {n:"assigned_to",t:"text",fk:"ft_users"},{n:"category",t:"text",nn:true},
-      {n:"subject",t:"text",nn:true},{n:"description",t:"text",nn:true},
-      {n:"status",t:"text",nn:true},{n:"priority",t:"text",nn:true},
-      {n:"related_account_id",t:"text",fk:"ft_accounts"},{n:"related_tx_id",t:"text"},
-      {n:"resolution_note",t:"text"},{n:"created_at",t:"timestamptz",nn:true},
-      {n:"updated_at",t:"timestamptz"},{n:"resolved_at",t:"timestamptz"}
-    ]},
-  { id:"ft_security_answers", label:"ft_security_answers", icon:"🔐", category:"auth",
-    desc:"Stores hashed answers to security questions for password recovery.",
-    cols:[
-      {n:"id",t:"text",pk:true},{n:"user_id",t:"text",fk:"ft_users",nn:true},
-      {n:"question_id",t:"int",nn:true},{n:"answer_hash",t:"text",nn:true},
-      {n:"created_at",t:"timestamptz",nn:true},{n:"updated_at",t:"timestamptz",nn:true}
-    ]}
-];
+    let scale = 0.72, panX = 20, panY = 10;
+    let dragging = null, dragOffX = 0, dragOffY = 0;
+    let panStart = null;
+    const canvas = document.getElementById("canvas");
+    const svg = document.getElementById("svg-lines");
+    const wrap = document.getElementById("canvas-wrap");
+    const nodeEls = {};
 
-const CAT_COLORS={auth:"#6c63ff",finance:"#00d4aa",ops:"#74b9ff",support:"#ff9f43"};
-const LAYOUT=[
-  {id:"ft_users",x:480,y:40},{id:"ft_accounts",x:860,y:40},
-  {id:"ft_ledger",x:1220,y:40},{id:"ft_security_answers",x:100,y:40},
-  {id:"ft_audit",x:860,y:360},{id:"ft_cards",x:1220,y:360},
-  {id:"ft_loans",x:480,y:360},{id:"ft_loan_payments",x:100,y:360},
-  {id:"ft_beneficiaries",x:100,y:660},{id:"ft_notifications",x:480,y:660},
-  {id:"ft_kyc_documents",x:860,y:660},{id:"ft_transaction_requests",x:1220,y:660},
-  {id:"ft_exchange_rates",x:100,y:980},{id:"ft_support_tickets",x:480,y:980},
-];
-
-let scale=0.72, panX=20, panY=10;
-let dragging=null, dragOffX=0, dragOffY=0;
-let panStart=null;
-const canvas=document.getElementById("canvas");
-const svg=document.getElementById("svg-lines");
-const wrap=document.getElementById("canvas-wrap");
-const nodeEls={};
-
-function buildNodes(){
-  let totalCols=0,totalFks=0;
-  SCHEMA.forEach(tbl=>{
-    const pos=LAYOUT.find(l=>l.id===tbl.id)||{x:100,y:100};
-    const div=document.createElement("div");
-    div.className="table-node";
-    div.id="node_"+tbl.id;
-    div.style.left=pos.x+"px";
-    div.style.top=pos.y+"px";
-    const color=CAT_COLORS[tbl.category]||"#6c63ff";
-    const fkCols=tbl.cols.filter(c=>c.fk);
-    totalFks+=fkCols.length;
-    totalCols+=tbl.cols.length;
-    div.innerHTML=`
+    function buildNodes() {
+      let totalCols = 0, totalFks = 0;
+      SCHEMA.forEach(tbl => {
+        const pos = LAYOUT.find(l => l.id === tbl.id) || { x: 100, y: 100 };
+        const div = document.createElement("div");
+        div.className = "table-node";
+        div.id = "node_" + tbl.id;
+        div.style.left = pos.x + "px";
+        div.style.top = pos.y + "px";
+        const color = CAT_COLORS[tbl.category] || "#6c63ff";
+        const fkCols = tbl.cols.filter(c => c.fk);
+        totalFks += fkCols.length;
+        totalCols += tbl.cols.length;
+        div.innerHTML = `
       <div class="table-head" style="background:${color}18;border-bottom-color:${color}40">
         <span class="table-icon">${tbl.icon}</span>
         <span style="color:${color}">${tbl.label}</span>
         <span class="row-count">${tbl.cols.length} cols</span>
       </div>
       <div class="table-cols">
-        ${tbl.cols.map(c=>`
-          <div class="col-row" title="${c.n} : ${c.t}${c.fk?' → '+c.fk:''}">
+        ${tbl.cols.map(c => `
+          <div class="col-row" title="${c.n} : ${c.t}${c.fk ? ' → ' + c.fk : ''}">
             <span class="col-name">${c.n}</span>
             <span class="col-type">${c.t}</span>
-            ${c.pk?`<span class="col-badge pk">PK</span>`:c.fk?`<span class="col-badge fk">FK</span>`:c.uq?`<span class="col-badge uq">UQ</span>`:c.nn?`<span class="col-badge nn">NN</span>`:''}
+            ${c.pk ? `<span class="col-badge pk">PK</span>` : c.fk ? `<span class="col-badge fk">FK</span>` : c.uq ? `<span class="col-badge uq">UQ</span>` : c.nn ? `<span class="col-badge nn">NN</span>` : ''}
           </div>`).join("")}
       </div>`;
-    div.addEventListener("mousedown",e=>startDrag(e,div));
-    div.addEventListener("mouseenter",()=>div.classList.add("selected"));
-    div.addEventListener("mouseleave",()=>div.classList.remove("selected"));
-    canvas.appendChild(div);
-    nodeEls[tbl.id]=div;
-  });
-  document.getElementById("s-cols").textContent=totalCols;
-  document.getElementById("s-fks").textContent=totalFks;
-  setTimeout(drawLines,80);
-}
-
-function getCenter(el){
-  const l=parseInt(el.style.left),t=parseInt(el.style.top);
-  return{x:l+el.offsetWidth/2,y:t+el.offsetHeight/2,
-         rx:l+el.offsetWidth,ry:t+el.offsetHeight/2,
-         lx:l,ly:t+el.offsetHeight/2};
-}
-
-function drawLines(){
-  while(svg.children.length>1)svg.removeChild(svg.lastChild);
-  let fkCount=0;
-  SCHEMA.forEach(tbl=>{
-    tbl.cols.filter(c=>c.fk).forEach(c=>{
-      const src=nodeEls[tbl.id];const dst=nodeEls[c.fk];
-      if(!src||!dst)return;
-      const s=getCenter(src),d=getCenter(dst);
-      const dx=d.x-s.x;
-      const x1=dx>0?s.rx:s.lx,y1=s.ry;
-      const x2=dx>0?d.lx:d.rx,y2=d.ly;
-      const cx=(x1+x2)/2;
-      const path=document.createElementNS("http://www.w3.org/2000/svg","path");
-      path.setAttribute("class","fk-line");
-      path.setAttribute("d",`M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`);
-      path.setAttribute("marker-end","url(#arrow)");
-      path.setAttribute("data-src",tbl.id);
-      path.setAttribute("data-col",c.n);
-      path.setAttribute("data-dst",c.fk);
-      path.style.opacity=".45";
-      path.addEventListener("mouseenter",e=>{
-        path.style.opacity="1";path.style.strokeWidth="2.5";
-        showTooltip(e,`<b>${tbl.label}.${c.n}</b><br>→ references <b>${c.fk}</b>`);
+        div.addEventListener("mousedown", e => startDrag(e, div));
+        div.addEventListener("mouseenter", () => div.classList.add("selected"));
+        div.addEventListener("mouseleave", () => div.classList.remove("selected"));
+        canvas.appendChild(div);
+        nodeEls[tbl.id] = div;
       });
-      path.addEventListener("mousemove",e=>moveTooltip(e));
-      path.addEventListener("mouseleave",()=>{path.style.opacity=".45";path.style.strokeWidth="1.5";hideTooltip()});
-      svg.appendChild(path);
-      fkCount++;
+      document.getElementById("s-cols").textContent = totalCols;
+      document.getElementById("s-fks").textContent = totalFks;
+      setTimeout(drawLines, 80);
+    }
+
+    function getCenter(el) {
+      const l = parseInt(el.style.left), t = parseInt(el.style.top);
+      return {
+        x: l + el.offsetWidth / 2, y: t + el.offsetHeight / 2,
+        rx: l + el.offsetWidth, ry: t + el.offsetHeight / 2,
+        lx: l, ly: t + el.offsetHeight / 2
+      };
+    }
+
+    function drawLines() {
+      while (svg.children.length > 1) svg.removeChild(svg.lastChild);
+      let fkCount = 0;
+      SCHEMA.forEach(tbl => {
+        tbl.cols.filter(c => c.fk).forEach(c => {
+          const src = nodeEls[tbl.id]; const dst = nodeEls[c.fk];
+          if (!src || !dst) return;
+          const s = getCenter(src), d = getCenter(dst);
+          const dx = d.x - s.x;
+          const x1 = dx > 0 ? s.rx : s.lx, y1 = s.ry;
+          const x2 = dx > 0 ? d.lx : d.rx, y2 = d.ly;
+          const cx = (x1 + x2) / 2;
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("class", "fk-line");
+          path.setAttribute("d", `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}`);
+          path.setAttribute("marker-end", "url(#arrow)");
+          path.setAttribute("data-src", tbl.id);
+          path.setAttribute("data-col", c.n);
+          path.setAttribute("data-dst", c.fk);
+          path.style.opacity = ".45";
+          path.addEventListener("mouseenter", e => {
+            path.style.opacity = "1"; path.style.strokeWidth = "2.5";
+            showTooltip(e, `<b>${tbl.label}.${c.n}</b><br>→ references <b>${c.fk}</b>`);
+          });
+          path.addEventListener("mousemove", e => moveTooltip(e));
+          path.addEventListener("mouseleave", () => { path.style.opacity = ".45"; path.style.strokeWidth = "1.5"; hideTooltip() });
+          svg.appendChild(path);
+          fkCount++;
+        });
+      });
+    }
+
+    function startDrag(e, div) {
+      if (e.button !== 0) return;
+      e.stopPropagation();
+      dragging = div;
+      dragOffX = e.clientX / scale - parseInt(div.style.left);
+      dragOffY = e.clientY / scale - parseInt(div.style.top);
+      div.style.zIndex = 100;
+    }
+
+    wrap.addEventListener("mousedown", e => {
+      if (e.target === wrap || e.target === canvas || e.target === svg) {
+        panStart = { x: e.clientX - panX, y: e.clientY - panY };
+        wrap.classList.add("dragging");
+      }
     });
-  });
-}
 
-function startDrag(e,div){
-  if(e.button!==0)return;
-  e.stopPropagation();
-  dragging=div;
-  dragOffX=e.clientX/scale-parseInt(div.style.left);
-  dragOffY=e.clientY/scale-parseInt(div.style.top);
-  div.style.zIndex=100;
-}
+    window.addEventListener("mousemove", e => {
+      if (dragging) {
+        const nx = e.clientX / scale - dragOffX;
+        const ny = e.clientY / scale - dragOffY;
+        dragging.style.left = Math.max(0, nx) + "px";
+        dragging.style.top = Math.max(0, ny) + "px";
+        drawLines();
+      } else if (panStart) {
+        panX = e.clientX - panStart.x;
+        panY = e.clientY - panStart.y;
+        applyTransform();
+      }
+    });
 
-wrap.addEventListener("mousedown",e=>{
-  if(e.target===wrap||e.target===canvas||e.target===svg){
-    panStart={x:e.clientX-panX,y:e.clientY-panY};
-    wrap.classList.add("dragging");
-  }
-});
+    window.addEventListener("mouseup", () => {
+      if (dragging) { dragging.style.zIndex = ""; dragging = null; }
+      panStart = null;
+      wrap.classList.remove("dragging");
+      minimap();
+    });
 
-window.addEventListener("mousemove",e=>{
-  if(dragging){
-    const nx=e.clientX/scale-dragOffX;
-    const ny=e.clientY/scale-dragOffY;
-    dragging.style.left=Math.max(0,nx)+"px";
-    dragging.style.top=Math.max(0,ny)+"px";
-    drawLines();
-  } else if(panStart){
-    panX=e.clientX-panStart.x;
-    panY=e.clientY-panStart.y;
-    applyTransform();
-  }
-});
+    wrap.addEventListener("wheel", e => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const rect = wrap.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      panX = mx - (mx - panX) * delta;
+      panY = my - (my - panY) * delta;
+      scale *= delta;
+      scale = Math.max(0.2, Math.min(3, scale));
+      applyTransform();
+    }, { passive: false });
 
-window.addEventListener("mouseup",()=>{
-  if(dragging){dragging.style.zIndex="";dragging=null;}
-  panStart=null;
-  wrap.classList.remove("dragging");
-  minimap();
-});
+    function applyTransform() {
+      canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+      document.getElementById("zoom-label").textContent = Math.round(scale * 100) + "%";
+    }
 
-wrap.addEventListener("wheel",e=>{
-  e.preventDefault();
-  const delta=e.deltaY>0?0.9:1.1;
-  const rect=wrap.getBoundingClientRect();
-  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
-  panX=mx-(mx-panX)*delta;
-  panY=my-(my-panY)*delta;
-  scale*=delta;
-  scale=Math.max(0.2,Math.min(3,scale));
-  applyTransform();
-},{passive:false});
+    function zoom(f) { scale *= f; scale = Math.max(0.2, Math.min(3, scale)); applyTransform(); minimap(); }
 
-function applyTransform(){
-  canvas.style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;
-  document.getElementById("zoom-label").textContent=Math.round(scale*100)+"%";
-}
+    function fitAll() {
+      if (!Object.keys(nodeEls).length) return;
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      Object.values(nodeEls).forEach(el => {
+        const l = parseInt(el.style.left), t = parseInt(el.style.top);
+        minX = Math.min(minX, l); minY = Math.min(minY, t);
+        maxX = Math.max(maxX, l + el.offsetWidth); maxY = Math.max(maxY, t + el.offsetHeight);
+      });
+      const pw = wrap.clientWidth, ph = wrap.clientHeight;
+      const fw = maxX - minX + 80, fh = maxY - minY + 80;
+      scale = Math.min(pw / fw, ph / fh, 1);
+      panX = (pw - fw * scale) / 2 - minX * scale + 40 * scale;
+      panY = (ph - fh * scale) / 2 - minY * scale + 40 * scale;
+      applyTransform(); minimap();
+    }
 
-function zoom(f){scale*=f;scale=Math.max(0.2,Math.min(3,scale));applyTransform();minimap();}
+    function resetLayout() {
+      LAYOUT.forEach(l => {
+        const el = nodeEls[l.id];
+        if (el) { el.style.left = l.x + "px"; el.style.top = l.y + "px"; }
+      });
+      drawLines(); fitAll();
+    }
 
-function fitAll(){
-  if(!Object.keys(nodeEls).length)return;
-  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-  Object.values(nodeEls).forEach(el=>{
-    const l=parseInt(el.style.left),t=parseInt(el.style.top);
-    minX=Math.min(minX,l);minY=Math.min(minY,t);
-    maxX=Math.max(maxX,l+el.offsetWidth);maxY=Math.max(maxY,t+el.offsetHeight);
-  });
-  const pw=wrap.clientWidth,ph=wrap.clientHeight;
-  const fw=maxX-minX+80,fh=maxY-minY+80;
-  scale=Math.min(pw/fw,ph/fh,1);
-  panX=(pw-fw*scale)/2-minX*scale+40*scale;
-  panY=(ph-fh*scale)/2-minY*scale+40*scale;
-  applyTransform();minimap();
-}
+    const tooltip = document.getElementById("tooltip");
+    function showTooltip(e, html) { tooltip.style.display = "block"; tooltip.innerHTML = html; moveTooltip(e); }
+    function moveTooltip(e) { tooltip.style.left = (e.clientX + 12) + "px"; tooltip.style.top = (e.clientY + 12) + "px"; }
+    function hideTooltip() { tooltip.style.display = "none"; }
 
-function resetLayout(){
-  LAYOUT.forEach(l=>{
-    const el=nodeEls[l.id];
-    if(el){el.style.left=l.x+"px";el.style.top=l.y+"px";}
-  });
-  drawLines();fitAll();
-}
+    function minimap() {
+      const mc = document.getElementById("mm-canvas");
+      const ctx = mc.getContext("2d");
+      ctx.clearRect(0, 0, 200, 140);
+      ctx.fillStyle = "#161924"; ctx.fillRect(0, 0, 200, 140);
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      Object.values(nodeEls).forEach(el => {
+        const l = parseInt(el.style.left), t = parseInt(el.style.top);
+        minX = Math.min(minX, l); minY = Math.min(minY, t);
+        maxX = Math.max(maxX, l + el.offsetWidth); maxY = Math.max(maxY, t + el.offsetHeight);
+      });
+      const scl = Math.min(195 / (maxX - minX + 40), 135 / (maxY - minY + 40));
+      Object.values(nodeEls).forEach((el, i) => {
+        const l = parseInt(el.style.left), t = parseInt(el.style.top);
+        const tbl = SCHEMA[i];
+        ctx.fillStyle = CAT_COLORS[tbl?.category] || "#6c63ff";
+        ctx.globalAlpha = .7;
+        ctx.beginPath();
+        ctx.roundRect((l - minX + 20) * scl, (t - minY + 20) * scl, el.offsetWidth * scl, el.offsetHeight * scl, 3);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+    }
 
-const tooltip=document.getElementById("tooltip");
-function showTooltip(e,html){tooltip.style.display="block";tooltip.innerHTML=html;moveTooltip(e);}
-function moveTooltip(e){tooltip.style.left=(e.clientX+12)+"px";tooltip.style.top=(e.clientY+12)+"px";}
-function hideTooltip(){tooltip.style.display="none";}
-
-function minimap(){
-  const mc=document.getElementById("mm-canvas");
-  const ctx=mc.getContext("2d");
-  ctx.clearRect(0,0,200,140);
-  ctx.fillStyle="#161924";ctx.fillRect(0,0,200,140);
-  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-  Object.values(nodeEls).forEach(el=>{
-    const l=parseInt(el.style.left),t=parseInt(el.style.top);
-    minX=Math.min(minX,l);minY=Math.min(minY,t);
-    maxX=Math.max(maxX,l+el.offsetWidth);maxY=Math.max(maxY,t+el.offsetHeight);
-  });
-  const scl=Math.min(195/(maxX-minX+40),135/(maxY-minY+40));
-  Object.values(nodeEls).forEach((el,i)=>{
-    const l=parseInt(el.style.left),t=parseInt(el.style.top);
-    const tbl=SCHEMA[i];
-    ctx.fillStyle=CAT_COLORS[tbl?.category]||"#6c63ff";
-    ctx.globalAlpha=.7;
-    ctx.beginPath();
-    ctx.roundRect((l-minX+20)*scl,(t-minY+20)*scl,el.offsetWidth*scl,el.offsetHeight*scl,3);
-    ctx.fill();
-    ctx.globalAlpha=1;
-  });
-}
-
-buildNodes();
-setTimeout(()=>{fitAll();minimap();},200);
-</script>
+    buildNodes();
+    setTimeout(() => { fitAll(); minimap(); }, 200);
+  </script>
 </body>
+
 </html>
