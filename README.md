@@ -9,7 +9,7 @@
 | 🔗 Link | URL |
 |---|---|
 | GitHub | https://github.com/your-username/fintech-core-banking |
-| Live Frontend | https://fintech-core-banking.pages.dev |
+| Live Frontend | https://69bfe4b059f45b815c1890c9--classy-taffy-e5537f.netlify.app/ |
 | API Docs (Swagger) | http://localhost:8000/docs |
 | ReDoc | http://localhost:8000/redoc |
 
