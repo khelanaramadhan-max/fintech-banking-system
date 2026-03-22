@@ -371,9 +371,13 @@ input,button,select{font-family:inherit;}
       <div class="sb-it" onclick="goPage('transfer')"><span class="sb-ico">⇄</span> <span data-i18n="nav_transfer"></span></div>
       <div class="sb-it" onclick="goPage('history')"><span class="sb-ico">📋</span> <span data-i18n="nav_history"></span></div>
       <div id="admin-nav" style="display:none">
-        <div class="sb-grp" id="sb-grp-admin"></div>
+        <div class="sb-grp">ADMIN</div>
+        <div class="sb-it" onclick="goPage('approvals')"><span class="sb-ico">⏳</span> Pending Approvals<span id="sb-badge" style="margin-left:auto;background:#dc2626;color:#fff;border-radius:9px;padding:1px 7px;font-size:.62rem;font-weight:700"></span></div>
+        <div class="sb-it" onclick="goPage('admin-loans')"><span class="sb-ico">💰</span> Loan Requests</div>
+        <div class="sb-it" onclick="goPage('admin-kyc')"><span class="sb-ico">🪪</span> KYC Review</div>
         <div class="sb-it" onclick="goPage('users')"><span class="sb-ico">👥</span> <span data-i18n="nav_users"></span></div>
         <div class="sb-it" onclick="goPage('audit')"><span class="sb-ico">🔍</span> <span data-i18n="nav_audit"></span></div>
+        <div class="sb-it" onclick="window.open('../schema-visualizer.html','_blank')"><span class="sb-ico">🗂</span> Schema Visualizer ↗</div>
       </div>
       <div class="sb-grp" id="sb-grp-account"></div>
       <div class="sb-it" onclick="goPage('profile')"><span class="sb-ico">👤</span> <span data-i18n="nav_profile"></span></div>
@@ -781,6 +785,43 @@ input,button,select{font-family:inherit;}
       </div>
 
 
+
+      <!-- PENDING APPROVALS (admin) -->
+      <div id="page-approvals" class="page">
+        <div class="ph"><div class="pt">⏳ Pending Approvals</div><div class="ps">Review and approve or reject large/flagged transaction requests.</div></div>
+        <div id="approvals-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px"></div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">TRANSACTION QUEUE</span><button class="btn btn-g btn-sm" onclick="renderApprovals()">↻ Refresh</button></div>
+          <div class="tw"><table class="tbl">
+            <thead><tr><th>ID</th><th>Initiated By</th><th>From Account</th><th>To Account</th><th>Amount</th><th>Risk</th><th>Description</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="approvals-tb"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ADMIN LOANS -->
+      <div id="page-admin-loans" class="page">
+        <div class="ph"><div class="pt">💰 Loan Management</div><div class="ps">Review, approve or reject customer loan applications.</div></div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">ALL LOAN APPLICATIONS</span><button class="btn btn-g btn-sm" onclick="renderAdminLoans()">↻ Refresh</button></div>
+          <div class="tw"><table class="tbl">
+            <thead><tr><th>Loan ID</th><th>Customer</th><th>Type</th><th>Amount</th><th>Rate</th><th>Term</th><th>Monthly</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="admin-loans-tb"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ADMIN KYC -->
+      <div id="page-admin-kyc" class="page">
+        <div class="ph"><div class="pt">🪪 KYC Review</div><div class="ps">Verify or reject customer identity documents.</div></div>
+        <div class="card">
+          <div class="card-hd"><span class="card-title">KYC SUBMISSIONS</span><button class="btn btn-g btn-sm" onclick="renderAdminKyc()">↻ Refresh</button></div>
+          <div class="tw"><table class="tbl">
+            <thead><tr><th>KYC ID</th><th>User ID</th><th>Doc Type</th><th>Filename</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <tbody id="admin-kyc-tb"></tbody>
+          </table></div>
+        </div>
+      </div>
 
     </main>
   </div>
@@ -1938,6 +1979,191 @@ function renderAudit(){
 function showMsg(id,msg,type){const el=document.getElementById(id);if(!el)return;el.className='mb '+type;el.textContent=msg;el.style.display='block';setTimeout(()=>{el.style.display='none';},6000);}
 function toast(msg,type='ok'){const icons={ok:'✓',err:'✕',info:'ℹ'};const el=document.createElement('div');el.className='toast toast-'+type;el.innerHTML='<span>'+icons[type]+'</span>'+msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),4000);}
 
+
+
+/* ═══ ADMIN — PENDING APPROVALS ═══ */
+const API = window._API || 'http://localhost:8000';
+
+function _tok(){ return localStorage.getItem('neobank_token') || ''; }
+function _hdrs(){ return { 'Content-Type':'application/json', 'Authorization':'Bearer '+_tok() }; }
+
+async function renderApprovals(){
+  const tb = document.getElementById('approvals-tb');
+  const statsEl = document.getElementById('approvals-stats');
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">Loading…</td></tr>';
+  try {
+    const r = await fetch(API+'/admin/transactions/all', {headers: _hdrs()});
+    const rows = await r.json();
+    const pending = rows.filter(x=>x.status==='PENDING');
+    // stats
+    if(statsEl){
+      statsEl.innerHTML = [
+        {ico:'⏳',lbl:'Pending',val:pending.length,color:'#dc2626'},
+        {ico:'✅',lbl:'Executed',val:rows.filter(x=>x.status==='EXECUTED').length,color:'#059669'},
+        {ico:'❌',lbl:'Rejected',val:rows.filter(x=>x.status==='REJECTED').length,color:'#6b7280'}
+      ].map(s=>`<div style="background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:16px;display:flex;gap:12px;align-items:center">
+        <span style="font-size:1.5rem">${s.ico}</span>
+        <div><div style="font-size:.62rem;color:var(--text2);text-transform:uppercase;letter-spacing:.08em">${s.lbl}</div>
+        <div style="font-size:1.4rem;font-weight:700;color:${s.color}">${s.val}</div></div></div>`).join('');
+    }
+    const badge = document.getElementById('sb-badge');
+    if(badge) badge.textContent = pending.length > 0 ? pending.length : '';
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">No transaction requests found.</td></tr>'; return; }
+    tb.innerHTML = rows.map(r=>{
+      const isPending = r.status === 'PENDING';
+      const statusBadge = {PENDING:'b-a',EXECUTED:'b-g',REJECTED:'b-r',EXPIRED:'b-r',UNDER_REVIEW:'b-b'}[r.status]||'b-b';
+      const risk = r.risk_score || 0;
+      const riskColor = risk>70?'#dc2626':risk>40?'#f59e0b':'#059669';
+      return `<tr>
+        <td class="mono" style="font-size:.68rem">${r.id}</td>
+        <td class="mono" style="font-size:.72rem">${r.initiated_by}</td>
+        <td class="mono" style="font-size:.72rem">${r.from_account_id||'—'}</td>
+        <td class="mono" style="font-size:.72rem">${r.to_account_id||'—'}</td>
+        <td style="font-weight:700;color:#34d399">${parseFloat(r.amount).toLocaleString('tr-TR',{style:'currency',currency:'TRY'})}</td>
+        <td><span style="font-weight:700;color:${riskColor}">${risk}/100</span>${(r.risk_flags||[]).map(f=>`<br><span style="font-size:.6rem;opacity:.7">${f}</span>`).join('')}</td>
+        <td style="font-size:.78rem;color:var(--text2)">${r.description||'—'}</td>
+        <td class="mono" style="font-size:.68rem">${new Date(r.created_at).toLocaleString()}</td>
+        <td>${isPending?`
+          <div style="display:flex;gap:6px">
+            <button onclick="approveRequest('${r.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#059669;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">✅ Approve</button>
+            <button onclick="rejectRequest('${r.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#dc2626;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">❌ Reject</button>
+          </div>
+        `:`<span class="bdg ${statusBadge}">${r.status}</span>`}</td>
+      </tr>`;
+    }).join('');
+  } catch(e){ tb.innerHTML=`<tr><td colspan="9" style="color:var(--red2);padding:16px">Error: ${e.message}</td></tr>`; }
+}
+
+async function approveRequest(id){
+  const note = prompt('Approval note (optional):') || '';
+  try {
+    const r = await fetch(`${API}/admin/transactions/${id}/approve`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    const d = await r.json();
+    if(r.ok){ toast('✅ Transaction approved & executed!','ok'); renderApprovals(); }
+    else toast('Error: '+JSON.stringify(d),'err');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+async function rejectRequest(id){
+  const note = prompt('Rejection reason:') || '';
+  try {
+    const r = await fetch(`${API}/admin/transactions/${id}/reject`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    const d = await r.json();
+    if(r.ok){ toast('❌ Transaction rejected.','info'); renderApprovals(); }
+    else toast('Error: '+JSON.stringify(d),'err');
+  } catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+/* ═══ ADMIN — LOANS ═══ */
+async function renderAdminLoans(){
+  const tb = document.getElementById('admin-loans-tb');
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text3)">Loading…</td></tr>';
+  try {
+    const r = await fetch(API+'/admin/loans', {headers:_hdrs()});
+    const rows = await r.json();
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">No loan applications found.</td></tr>'; return; }
+    tb.innerHTML = rows.map(l=>{
+      const isPending = ['PENDING','UNDER_REVIEW'].includes(l.status);
+      const statusBadge = {PENDING:'b-a',ACTIVE:'b-g',APPROVED:'b-g',REJECTED:'b-r',CLOSED:'b-b'}[l.status]||'b-b';
+      return `<tr>
+        <td class="mono" style="font-size:.68rem">${l.id}</td>
+        <td class="mono" style="font-size:.72rem">${l.user_id}</td>
+        <td><span class="bdg b-b">${l.loan_type}</span></td>
+        <td style="font-weight:700">${parseFloat(l.principal_amount).toLocaleString('tr-TR',{style:'currency',currency:'TRY'})}</td>
+        <td class="mono">${(parseFloat(l.interest_rate)*100).toFixed(2)}%</td>
+        <td>${l.term_months} mo</td>
+        <td class="mono">${parseFloat(l.monthly_payment).toLocaleString('tr-TR',{style:'currency',currency:'TRY'})}</td>
+        <td><span class="bdg ${statusBadge}">${l.status}</span></td>
+        <td>${isPending?`
+          <div style="display:flex;gap:6px">
+            <button onclick="approveLoan('${l.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#059669;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">✅ Approve</button>
+            <button onclick="rejectLoan('${l.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#dc2626;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">❌ Reject</button>
+          </div>
+        `:'—'}</td>
+      </tr>`;
+    }).join('');
+  } catch(e){ tb.innerHTML=`<tr><td colspan="9" style="color:var(--red2);padding:16px">Error: ${e.message}</td></tr>`; }
+}
+
+async function approveLoan(id){
+  const note = prompt('Approval note:') || '';
+  try {
+    const r = await fetch(`${API}/admin/loans/${id}/approve`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    if(r.ok){ toast('✅ Loan approved & funds disbursed!','ok'); renderAdminLoans(); }
+    else toast('Error approving loan','err');
+  } catch(e){ toast(e.message,'err'); }
+}
+
+async function rejectLoan(id){
+  const note = prompt('Rejection reason:') || '';
+  try {
+    const r = await fetch(`${API}/admin/loans/${id}/reject`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    if(r.ok){ toast('❌ Loan rejected.','info'); renderAdminLoans(); }
+    else toast('Error rejecting loan','err');
+  } catch(e){ toast(e.message,'err'); }
+}
+
+/* ═══ ADMIN — KYC ═══ */
+async function renderAdminKyc(){
+  const tb = document.getElementById('admin-kyc-tb');
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">Loading…</td></tr>';
+  try {
+    const r = await fetch(API+'/kyc', {headers:_hdrs()});
+    const rows = await r.json();
+    if(!rows.length){ tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No KYC submissions found.</td></tr>'; return; }
+    tb.innerHTML = rows.map(k=>{
+      const isPending = k.status === 'PENDING';
+      const statusBadge = {PENDING:'b-a',APPROVED:'b-g',REJECTED:'b-r',UNDER_REVIEW:'b-b'}[k.status]||'b-b';
+      return `<tr>
+        <td class="mono" style="font-size:.68rem">${k.id}</td>
+        <td class="mono" style="font-size:.72rem">${k.user_id}</td>
+        <td><span class="bdg b-b">${k.document_type}</span></td>
+        <td style="font-size:.78rem;color:var(--text2)">${k.file_name||'—'}</td>
+        <td><span class="bdg ${statusBadge}">${k.status}</span></td>
+        <td class="mono" style="font-size:.68rem">${new Date(k.submitted_at).toLocaleString()}</td>
+        <td>${isPending?`
+          <div style="display:flex;gap:6px">
+            <button onclick="approveKyc('${k.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#059669;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">✅ Approve</button>
+            <button onclick="rejectKyc('${k.id}')" style="padding:5px 10px;border-radius:6px;border:none;background:#dc2626;color:#fff;font-size:.72rem;font-weight:700;cursor:pointer">❌ Reject</button>
+          </div>
+        `:'—'}</td>
+      </tr>`;
+    }).join('');
+  } catch(e){ tb.innerHTML=`<tr><td colspan="7" style="color:var(--red2);padding:16px">Error: ${e.message}</td></tr>`; }
+}
+
+async function approveKyc(id){
+  const note = prompt('Approval note:') || '';
+  try {
+    const r = await fetch(`${API}/admin/kyc/${id}/approve`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    if(r.ok){ toast('✅ KYC document approved!','ok'); renderAdminKyc(); }
+    else toast('Error approving KYC','err');
+  } catch(e){ toast(e.message,'err'); }
+}
+
+async function rejectKyc(id){
+  const note = prompt('Rejection reason:') || '';
+  try {
+    const r = await fetch(`${API}/admin/kyc/${id}/reject`, {method:'POST',headers:_hdrs(),body:JSON.stringify({note})});
+    if(r.ok){ toast('❌ KYC rejected.','info'); renderAdminKyc(); }
+    else toast('Error rejecting KYC','err');
+  } catch(e){ toast(e.message,'err'); }
+}
+
+/* Auto-load admin pages when navigated to */
+const _origGoPage = window.goPage;
+if(typeof goPage === 'function'){
+  const _orig = goPage;
+  window.goPage = function(pg){
+    _orig(pg);
+    if(pg==='approvals') renderApprovals();
+    else if(pg==='admin-loans') renderAdminLoans();
+    else if(pg==='admin-kyc') renderAdminKyc();
+  };
+}
 
 /* ═══ INIT ═══ */
 applyTranslations();
