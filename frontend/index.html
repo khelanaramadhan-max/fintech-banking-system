@@ -287,6 +287,7 @@ input,button,select{font-family:inherit;}
         <div class="af-wrap"><input type="password" id="l-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"><span class="af-ico btn" onclick="togglePw('l-pass',this)">👁</span></div>
       </div>
       <button class="btn-submit" onclick="doLogin()" id="btn-login-submit"></button>
+      <div style="text-align:center;margin-top:14px"><a href="#" onclick="switchTab('forgot')" style="color:var(--blue3);font-size:.75rem;font-weight:700;text-decoration:none">Forgot Password?</a></div>
     </div>
 
     <!-- REGISTER -->
@@ -333,6 +334,33 @@ input,button,select{font-family:inherit;}
         <label for="kvkk" id="lbl-kvkk"></label>
       </div>
       <button class="btn-submit" onclick="doRegister()" id="btn-reg-submit"></button>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div id="panel-forgot" style="display:none">
+      <div id="forgot-step-1">
+        <div class="af">
+          <label>Email Address</label>
+          <div class="af-wrap"><input type="email" id="f-email"><span class="af-ico">✉</span></div>
+        </div>
+        <button class="btn-submit" style="margin-top:14px" onclick="fetchSecurityQuestion()">Next ➔</button>
+      </div>
+      <div id="forgot-step-2" style="display:none">
+        <div class="af">
+          <label>Security Question</label>
+          <div style="font-size:.8rem;color:var(--text);margin-bottom:10px;padding:10px;background:var(--s2);border-radius:var(--r3);border:1px solid var(--bd2)" id="f-question-text"></div>
+        </div>
+        <div class="af">
+          <label>Your Answer</label>
+          <div class="af-wrap"><input type="text" id="f-answer"></div>
+        </div>
+        <div class="af">
+          <label>New Password</label>
+          <div class="af-wrap"><input type="password" id="f-new-pass"></div>
+        </div>
+        <button class="btn-submit" style="margin-top:14px" onclick="submitSecurityAnswer()">Reset Password</button>
+      </div>
+      <div style="text-align:center;margin-top:14px"><a href="#" onclick="switchTab('login')" style="color:var(--text3);font-size:.75rem;font-weight:600;text-decoration:none">← Back to Login</a></div>
     </div>
   </div>
 </div>
@@ -746,6 +774,30 @@ input,button,select{font-family:inherit;}
               <div class="fld"><label data-i18n="confirm_password"></label><input type="password" id="cp-new2"></div>
               <div class="fm"><button class="btn btn-p" onclick="changePassword()" data-i18n="btn_update"></button></div>
               <div class="mb" id="cp-msg"></div>
+            </div>
+          </div>
+          
+          <div class="card" style="grid-column: 1 / -1;">
+            <div class="card-hd"><span class="card-title">Security Questions Recovery</span></div>
+            <div class="card-body">
+              <p style="font-size:.75rem;color:var(--text2);margin-bottom:12px">Set up a security question to recover your account if you forget your password.</p>
+              <div class="g2">
+                <div class="fld">
+                  <label>Select Question</label>
+                  <select id="sq-id">
+                    <option value="1">What was the name of your first pet?</option>
+                    <option value="2">In what city were you born?</option>
+                    <option value="3">What is your mother's maiden name?</option>
+                    <option value="4">What high school did you attend?</option>
+                  </select>
+                </div>
+                <div class="fld">
+                  <label>Your Answer</label>
+                  <input type="text" id="sq-ans" placeholder="Make it memorable">
+                </div>
+              </div>
+              <div class="fm"><button class="btn btn-p" onclick="setupSecurityQuestion()">Save Security Question</button></div>
+              <div class="mb" id="sq-msg"></div>
             </div>
           </div>
         </div>
@@ -2167,6 +2219,96 @@ if(typeof goPage === 'function'){
 
 /* ═══ INIT ═══ */
 applyTranslations();
+</script>
+<script>
+const SECURITY_QUESTIONS = {
+  1: "What was the name of your first pet?",
+  2: "In what city were you born?",
+  3: "What is your mother's maiden name?",
+  4: "What high school did you attend?"
+};
+let currentForgotQuestionId = null;
+
+async function setupSecurityQuestion() {
+  const qId = document.getElementById("sq-id").value;
+  const ans = document.getElementById("sq-ans").value;
+  let msgEl = document.getElementById("sq-msg");
+  if(!ans) {
+    msgEl.className = "mb err"; msgEl.innerText = "Please enter an answer"; msgEl.style.display = "block"; return;
+  }
+  try {
+    const res = await fetch("/api/auth/security-questions", {
+      method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer "+localStorage.getItem("ft_token") },
+      body: JSON.stringify({ answers: [{ question_id: parseInt(qId), answer: ans }] })
+    });
+    if(res.ok) {
+      msgEl.className = "mb ok"; msgEl.innerText = "Security question saved successfully"; msgEl.style.display = "block";
+      document.getElementById("sq-ans").value = "";
+    } else {
+      let err = await res.json();
+      msgEl.className = "mb err"; msgEl.innerText = err.detail || "Error saving question"; msgEl.style.display = "block";
+    }
+  } catch(e) { msgEl.className = "mb err"; msgEl.innerText = "Network error"; msgEl.style.display = "block"; }
+}
+
+async function fetchSecurityQuestion() {
+  const email = document.getElementById("f-email").value;
+  if(!email) return alert("Enter email first");
+  try {
+    const res = await fetch(`/api/auth/security-questions/challenge?email=${encodeURIComponent(email)}`);
+    if(res.ok) {
+      const data = await res.json();
+      currentForgotQuestionId = data.question_ids[0];
+      document.getElementById("f-question-text").innerText = SECURITY_QUESTIONS[currentForgotQuestionId] || "Security Question";
+      document.getElementById("forgot-step-1").style.display = "none";
+      document.getElementById("forgot-step-2").style.display = "block";
+      document.getElementById("g-err").style.display = "none";
+    } else {
+      let alertMsg = document.getElementById("g-err");
+      document.getElementById("g-err-msg").innerText = "No security questions found for this email.";
+      alertMsg.style.display = "flex";
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function submitSecurityAnswer() {
+  const email = document.getElementById("f-email").value;
+  const answer = document.getElementById("f-answer").value;
+  const newPass = document.getElementById("f-new-pass").value;
+  if(!answer || newPass.length < 6) return alert("Answer required and password must be at least 6 characters.");
+  try {
+    const res = await fetch("/api/auth/recover-password", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, question_id: currentForgotQuestionId, answer: answer, new_password: newPass })
+    });
+    if(res.ok) {
+      alert("Password reset successfully! You can now log in.");
+      switchTab("login");
+    } else {
+      let err = await res.json();
+      alert("Error: " + (err.detail || "Incorrect answer"));
+    }
+  } catch(e) { console.error(e); }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const ftOriginalSwitchTab = window.switchTab;
+    window.switchTab = function(tab) {
+      if (tab === 'forgot') {
+        document.getElementById("panel-login").style.display = "none";
+        document.getElementById("panel-register").style.display = "none";
+        if(document.getElementById("panel-forgot")) document.getElementById("panel-forgot").style.display = "block";
+        document.getElementById("tab-login-btn").classList.remove("on");
+        document.getElementById("tab-reg-btn").classList.remove("on");
+        document.getElementById("g-err").style.display = "none";
+        if(document.getElementById("forgot-step-1")) document.getElementById("forgot-step-1").style.display = "block";
+        if(document.getElementById("forgot-step-2")) document.getElementById("forgot-step-2").style.display = "none";
+      } else {
+        if(document.getElementById("panel-forgot")) document.getElementById("panel-forgot").style.display = "none";
+        if(ftOriginalSwitchTab) ftOriginalSwitchTab(tab);
+      }
+    }
+});
 </script>
 </body>
 </html>

@@ -500,6 +500,28 @@ create index if not exists idx_ft_tickets_assigned_to on public.ft_support_ticke
 create index if not exists idx_ft_tickets_priority    on public.ft_support_tickets(priority);
 
 -- ============================================================
+-- TABLE 14: ft_security_answers
+-- Stores hashed answers to security questions for password recovery.
+-- ============================================================
+create table if not exists public.ft_security_answers (
+  id              text primary key default gen_random_uuid()::text,
+  user_id         text not null references public.ft_users(id) on delete cascade,
+  question_id     int not null check (question_id > 0),
+  answer_hash     text not null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now(),
+  unique (user_id, question_id)
+);
+
+alter table public.ft_security_answers enable row level security;
+
+drop policy if exists "security_answers_all" on public.ft_security_answers;
+create policy "security_answers_all" on public.ft_security_answers
+  for all using (true) with check (true);
+
+create index if not exists idx_ft_security_answers_user on public.ft_security_answers(user_id);
+
+-- ============================================================
 -- SEED DATA
 -- ============================================================
 

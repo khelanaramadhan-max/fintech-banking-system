@@ -1,11 +1,96 @@
-version: '3.8'
+# ============================================================
+# Fintech — Docker Compose
+# Usage: docker compose up --build
+# ============================================================
+
+version: "3.9"
 
 services:
-  api:
-    build: ./backend
-    container_name: fintech_core_engine
+
+  # ── Backend — FastAPI ──────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fintech_backend
+    restart: unless-stopped
     ports:
-      - "8080:8080"
-    restart: always
+      - "${APP_PORT:-8000}:8000"
     environment:
-      - ENVIRONMENT=development
+      APP_ENV: ${APP_ENV:-development}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required — copy .env.example to .env}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRE_HOURS: ${JWT_EXPIRE_HOURS:-24}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@fintech.io}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-100}
+      WEBHOOK_URL: ${WEBHOOK_URL:-http://webhook_receiver:9000/webhook}
+      FAST_MAX_AMOUNT: ${FAST_MAX_AMOUNT:-100000}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - fintech_net
+    depends_on:
+      - webhook_receiver
+
+  # ── Frontend — Nginx serving static HTML ──────────────────
+  frontend:
+    image: nginx:1.25-alpine
+    container_name: fintech_frontend
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-3000}:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    networks:
+      - fintech_net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Webhook Receiver — captures domain events ─────────────
+  webhook_receiver:
+    image: python:3.12-slim
+    container_name: fintech_webhook
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    command: |
+      python -c "
+      import json, http.server, datetime
+      class H(http.server.BaseHTTPRequestHandler):
+          def do_POST(self):
+              n=int(self.headers['Content-Length'])
+              d=json.loads(self.rfile.read(n))
+              ts=datetime.datetime.now().strftime('%H:%M:%S')
+              print(f'[{ts}] EVENT: {d.get(\"event_type\",\"?\")} | {json.dumps(d.get(\"payload\",{}))[:120]}')
+              self.send_response(200)
+              self.end_headers()
+          def log_message(self, *a): pass
+      print('Webhook receiver listening on :9000')
+      http.server.HTTPServer(('0.0.0.0',9000),H).serve_forever()
+      "
+    networks:
+      - fintech_net
+
+# ── Networks ───────────────────────────────────────────────
+networks:
+  fintech_net:
+    driver: bridge
+    name: fintech_network
+
+# ── Volumes (for future MongoDB) ──────────────────────────
+volumes:
+  mongo_data:
+    driver: local

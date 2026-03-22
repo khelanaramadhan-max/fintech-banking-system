@@ -1113,3 +1113,81 @@ def admin_dashboard(user: dict = Depends(require_admin)):
         }
     except Exception as e:
         raise HTTPException(500, str(e))
+
+
+# ===========================================================================
+# PASSWORD RECOVERY VIA SECURITY QUESTIONS
+# ===========================================================================
+
+class SecurityAnswerSetup(BaseModel):
+    question_id: int = Field(..., gt=0)
+    answer: str = Field(..., min_length=1)
+
+class SecurityAnswersSetupRequest(BaseModel):
+    answers: List[SecurityAnswerSetup]
+
+class PasswordRecoverRequest(BaseModel):
+    email: EmailStr
+    question_id: int
+    answer: str
+    new_password: str = Field(..., min_length=6)
+
+@app.post("/auth/security-questions", tags=["Auth"], status_code=201)
+def setup_security_questions(body: SecurityAnswersSetupRequest, user: dict = Depends(get_current_user)):
+    """User sets or updates their security questions."""
+    rows = []
+    for a in body.answers:
+        ans_hash = hashlib.sha256(a.answer.strip().lower().encode()).hexdigest()
+        rows.append({
+            "user_id": user["user_id"],
+            "question_id": a.question_id,
+            "answer_hash": ans_hash
+        })
+    try:
+        # Delete existing ones to allow updates
+        supabase.table("ft_security_answers").delete().eq("user_id", user["user_id"]).execute()
+        if rows:
+            supabase.table("ft_security_answers").insert(rows).execute()
+        add_audit_to_db(user["user_id"], "SET_SECURITY_QUESTIONS", f"Set {len(rows)} questions", "SUCCESS")
+        return {"status": "SUCCESS"}
+    except Exception as e:
+        raise HTTPException(422, str(e))
+
+@app.get("/auth/security-questions/challenge", tags=["Auth"])
+def get_security_challenge(email: str):
+    """Get the list of question IDs a user has set up for recovery."""
+    user_res = supabase.table("ft_users").select("id").eq("email", email).execute()
+    if not user_res.data:
+        raise HTTPException(404, "User not found")
+    user_id = user_res.data[0]["id"]
+    ans_res = supabase.table("ft_security_answers").select("question_id").eq("user_id", user_id).execute()
+    q_ids = [row["question_id"] for row in ans_res.data] if ans_res.data else []
+    if not q_ids:
+        raise HTTPException(404, "No security questions set for this user")
+    return {"question_ids": q_ids}
+
+@app.post("/auth/recover-password", tags=["Auth"])
+def recover_password(body: PasswordRecoverRequest, request: Request):
+    """Recover password using a security question answer."""
+    user_res = supabase.table("ft_users").select("id").eq("email", body.email).execute()
+    if not user_res.data:
+        raise HTTPException(404, "User not found")
+    user_id = user_res.data[0]["id"]
+    
+    ans_res = supabase.table("ft_security_answers").select("answer_hash").eq("user_id", user_id).eq("question_id", body.question_id).execute()
+    if not ans_res.data:
+        raise HTTPException(401, "Security question not found or not set")
+    
+    stored_hash = ans_res.data[0]["answer_hash"]
+    given_hash = hashlib.sha256(body.answer.strip().lower().encode()).hexdigest()
+    
+    if not hmac.compare_digest(stored_hash, given_hash):
+        add_audit_to_db(user_id, "RECOVER_PASSWORD", "Invalid security answer", "FAILURE", request.client.host if request.client else None)
+        raise HTTPException(401, "Incorrect answer")
+    
+    try:
+        supabase.table("ft_users").update({"password": body.new_password}).eq("id", user_id).execute()
+        add_audit_to_db(user_id, "RECOVER_PASSWORD", "Successfully recovered via security question", "SUCCESS", request.client.host if request.client else None)
+        return {"status": "SUCCESS", "message": "Password updated successfully"}
+    except Exception as e:
+        raise HTTPException(422, str(e))
