@@ -17,7 +17,7 @@
 
 ## 🏗️ Architecture
 
-This project is a **Modular Monolith** — a single FastAPI application with clearly separated internal modules. All modules share one data layer (`BankStore`) and communicate directly, protected by a thread-safe `threading.RLock()`.
+This project is a **Modular Monolith** — a single FastAPI application with clearly separated internal modules. All modules share one data layer backed by **Supabase PostgreSQL**, utilizing Row Level Security (RLS) and real-time capabilities.
 
 ```
 docker compose up --build
@@ -33,7 +33,7 @@ docker compose up --build
 │   │   HTML5 + CSS3 + Vanilla JavaScript · TR / EN / RU i18n     │   │
 │   │                                                               │   │
 │   │  Auth · Dashboard · Accounts · TopUp · Payment · Transfer    │   │
-│   │  History · Profile · Admin Panel · Card Detection Engine     │   │
+│   │  History · Profile · Admin Panel · Schema Visualizer         │   │
 │   └──────────────────────────┬──────────────────────────────────┘   │
 │                                │  HTTP REST + JSON                   │
 │                                │  Authorization: Bearer <JWT>        │
@@ -41,18 +41,18 @@ docker compose up --build
 │   ┌─────────────────────────────────────────────────────────────┐   │
 │   │              BACKEND  (FastAPI · port 8000)                   │   │
 │   │                                                               │   │
-│   │   Rate Limiter → JWT Auth → RBAC → BankStore (RLock)        │   │
+│   │   Rate Limiter → JWT Auth → RBAC → Supabase Client          │   │
 │   │                                                               │   │
 │   │   auth · customers · accounts · transactions · ledger        │   │
 │   │   transfers (EFT/SWIFT/FAST/HAVALE) · audit · events        │   │
 │   └──────────────────────────┬──────────────────────────────────┘   │
-│                                │  threading.RLock (Atomic)           │
+│                                │  PostgreSQL via Supabase API        │
 │                                ▼                                     │
 │   ┌─────────────────────────────────────────────────────────────┐   │
-│   │           BankStore — In-Memory Data Layer                    │   │
+│   │           Supabase PostgreSQL Data Layer                      │   │
 │   │                                                               │   │
-│   │   users{}  customers{}  accounts{}                            │   │
-│   │   ledger[]  audit_logs[]  event_log[]   ← APPEND-ONLY        │   │
+│   │   users  customers  accounts  security_questions              │   │
+│   │   ft_ledger  audit_logs  event_log   ← APPEND-ONLY           │   │
 │   └─────────────────────────────────────────────────────────────┘   │
 └───────────────────────────────────────────────────────────────────────┘
 ```
@@ -91,17 +91,21 @@ docker compose up --build
 ## ✨ Features
 
 ### Core Banking
+- **Supabase PostgreSQL Integration** — transitioned from in-memory arrays to a robust relational database with Row Level Security (RLS)
 - **Append-Only Ledger** — transactions are never deleted or modified; balance is always computed, never stored
 - **Double-Entry Bookkeeping** — every transfer creates a DEBIT + CREDIT pair; `|debit| always = credit`
 - **Multi-Type Transfers** — EFT, SWIFT (international), FAST (instant 7/24), HAVALE (intrabank)
 - **Top Up via Card** — deposit funds using Visa / Mastercard / Troy / Amex with real BIN-range detection
 - **Bill Payments** — Electric, Gas, Internet, Phone, Water, Netflix quick-pay
 - **Virtual Account Cards** — animated card UI with per-account color coding
+- **Schema Visualizer** — interactive tool to understand and explore the database structure (`schema-visualizer.html`)
+- **Admin & Member Roles** — differentiated access allowing admins to view and approve transactions
 
 ### Security
 - **JWT Authentication** — custom HS256 (no external library), 24-hour expiry
 - **SHA-256 Password Hashing** — passwords never stored in plain text
-- **Role-Based Access Control** — Admin vs Customer enforced on every endpoint
+- **Advanced Registration & Password Recovery** — users set up security questions during registration, used securely for password recovery
+- **Role-Based Access Control** — Admin vs Customer (Member) enforced on endpoints and DB Policies
 - **Rate Limiting** — 100 req/min per IP (sliding window, in-memory)
 - **Audit Trail** — every login, transfer, and admin action logged with timestamp and IP
 - **TC Kimlik Validation** — full 11-digit Turkish national ID checksum algorithm on registration
@@ -168,16 +172,16 @@ open frontend/fintech.html
 fintech/
 ├── backend/
 │   ├── main.py                # FastAPI application (~350 lines)
-│   │   ├── BankStore          # Thread-safe in-memory data layer
+│   │   ├── Supabase Logic     # Replaced in-memory data layer with PostgreSQL
 │   │   ├── JWT helpers        # Custom HS256 — stdlib only, no external lib
 │   │   ├── Pydantic models    # Request/response validation with Decimal
 │   │   └── 16 REST endpoints  # Auth, Accounts, Transfers, Ledger, Audit
-│   ├── requirements.txt       # fastapi==0.115, uvicorn==0.30, pydantic==2.9
+│   ├── requirements.txt       # fastapi==0.115, uvicorn==0.30, pydantic==2.9, supabase
 │   └── Dockerfile             # python:3.12-slim
 │
 ├── frontend/
 │   └── fintech.html           # Complete SPA (~1100 lines)
-│       ├── Auth Screen        # Login + Register with TC Kimlik validation
+│       ├── Auth Screen        # Login + Register with security questions & TC Kimlik
 │       ├── Dashboard          # Balance stats + recent transactions
 │       ├── Accounts           # View accounts + open new account
 │       ├── Top Up             # Card deposit with live network detection
@@ -186,6 +190,7 @@ fintech/
 │       ├── History            # Filterable transaction log
 │       ├── Profile            # Personal info + change password
 │       └── Admin Panel        # User list + full audit trail
+│   └── schema-visualizer.html # Tools for tracing the Supabase Postgres schema
 │
 ├── infra/
 │   └── docker-compose.yml     # backend (FastAPI) + frontend (Nginx)
@@ -194,6 +199,7 @@ fintech/
 │   ├── architecture.png       # System architecture diagram
 │   └── security_notes.md      # Security implementation notes
 │
+├── supabase-schema.sql        # Database initialization & RLS policies
 ├── .env.example               # JWT_SECRET, ADMIN_PASSWORD placeholders
 └── README.md                  # This file
 ```
@@ -232,15 +238,14 @@ fintech/
 
 ## 📒 Ledger Consistency
 
-Since we use an in-memory store, ledger integrity is enforced through:
+Since we use Supabase PostgreSQL, ledger integrity is enforced through:
 
-- **Append-only design** — no UPDATE or DELETE ever touches `ledger[]`
-- **Thread-safe writes** — `threading.RLock()` wraps all balance mutations
-- **Computed balances** — balance is NEVER stored; always computed as `Σ CREDIT − Σ DEBIT`
+- **Append-only design** — no UPDATE or DELETE ever touches `ft_ledger`
+- **Computed balances** — ledger is the single source of truth for history
 - **Double-entry bookkeeping** — every transfer creates paired DEBIT + CREDIT entries
-- **Atomic transfers** — debit and credit happen inside the same `with self._lock:` block; no partial states
 - **Unique reference IDs** — every transaction carries a UUID `ref` for full traceability
-- **Decimal arithmetic** — `decimal.Decimal` used throughout (not `float`) to prevent rounding errors
+- **Decimal arithmetic** — `decimal.Decimal` used throughout backend (not `float`) to prevent rounding errors
+- **Row Level Security (RLS)** — DB policies prevent unauthorized access or mutation
 
 ---
 
@@ -279,6 +284,9 @@ Webhook payloads include: `event_type`, `payload` (account IDs, amount, referenc
 | POST | `/transfers` | JWT | Transfer (EFT / SWIFT / FAST / HAVALE) |
 | GET | `/accounts/{id}/ledger` | JWT | Account transaction history |
 | GET | `/ledger` | Admin | Full system ledger |
+| POST | `/auth/security-questions` | JWT | Setup security questions |
+| GET | `/auth/security-questions/challenge` | — | Get security question for user |
+| POST | `/auth/recover-password` | — | Reset password using security answer |
 | GET | `/audit` | Admin | Security audit trail |
 | GET | `/events` | Admin | Domain event stream |
 | GET | `/health` | — | Health check (used by Docker) |
