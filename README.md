@@ -1,4 +1,4 @@
-# 🏦 Fintech — Mini Core Banking System
+# 🏦 Fintech 
 
 **Team 2 · Python + FastAPI + Vanilla JS + Docker**  
 **Architecture: Modular Monolith**  
@@ -8,7 +8,7 @@
 
 | 🔗 Link | URL |
 |---|---|
-| GitHub | https://github.com/your-username/fintech-core-banking |
+| GitHub | https://khelanaramadhan-max.github.io/fintech-banking-system/ |
 | Live Frontend | https://69bfe4b059f45b815c1890c9--classy-taffy-e5537f.netlify.app/ |
 | API Docs (Swagger) | http://localhost:8000/docs |
 | ReDoc | http://localhost:8000/redoc |
