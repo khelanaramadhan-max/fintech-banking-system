@@ -9,7 +9,7 @@
 | 🔗 Link | URL |
 |---|---|
 | GitHub | https://khelanaramadhan-max.github.io/fintech-banking-system/ |
-| Live Frontend | https://69bfe4b059f45b815c1890c9--classy-taffy-e5537f.netlify.app/ |
+| Live Frontend | https://fintech-banking-system.netlify.app/ |
 | API Docs (Swagger) | http://localhost:8000/docs |
 | ReDoc | http://localhost:8000/redoc |
 
